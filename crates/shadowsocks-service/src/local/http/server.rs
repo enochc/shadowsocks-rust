@@ -5,7 +5,7 @@
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
 use hyper::{body, server::conn::http1, service};
-use log::{error, info, trace, debug};
+use log::{error, info, debug};
 use shadowsocks::{config::ServerAddr, net::TcpListener};
 use tokio::{
     io::{AsyncRead, AsyncWrite},

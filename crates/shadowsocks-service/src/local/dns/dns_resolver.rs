@@ -11,7 +11,7 @@ use hickory_resolver::proto::{
     op::{Message, Query},
     rr::{DNSClass, Name, RData, RecordType},
 };
-use log::{debug, trace};
+use log::{debug};
 
 use shadowsocks::{config::Mode, dns_resolver::DnsResolve, net::ConnectOpts};
 

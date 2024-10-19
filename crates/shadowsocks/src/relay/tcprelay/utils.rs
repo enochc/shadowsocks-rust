@@ -12,7 +12,7 @@ use std::{
 };
 
 use futures::ready;
-use log::{debug, trace};
+use log::{debug};
 use pin_project::pin_project;
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 

@@ -9,7 +9,7 @@ use std::{
 use bytes::{BufMut, BytesMut};
 use cfg_if::cfg_if;
 use futures::ready;
-use log::{trace, debug};
+use log::{debug};
 use once_cell::sync::Lazy;
 use pin_project::pin_project;
 use tokio::{

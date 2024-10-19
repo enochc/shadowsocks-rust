@@ -10,7 +10,7 @@ use std::{
 use async_trait::async_trait;
 use byte_string::ByteStr;
 use bytes::{BufMut, BytesMut};
-use log::{debug, error, info, trace};
+use log::{debug, error, info};
 use shadowsocks::{
     relay::{
         socks5::{Address, UdpAssociateHeader},

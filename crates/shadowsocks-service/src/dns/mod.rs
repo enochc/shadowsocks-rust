@@ -2,7 +2,7 @@
 
 #[cfg(feature = "hickory-dns")]
 use hickory_resolver::config::ResolverOpts;
-use log::{trace, debug};
+use log::{debug};
 use shadowsocks::{dns_resolver::DnsResolver, net::ConnectOpts};
 
 use crate::config::DnsConfig;

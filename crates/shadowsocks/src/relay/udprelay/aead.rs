@@ -15,7 +15,7 @@ use std::io::Cursor;
 
 use byte_string::ByteStr;
 use bytes::{BufMut, BytesMut};
-use log::{trace, debug};
+use log::{debug};
 
 use crate::{
     context::Context,

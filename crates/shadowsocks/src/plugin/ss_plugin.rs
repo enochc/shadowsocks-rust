@@ -1,6 +1,6 @@
 use super::{PluginConfig, PluginMode};
 use crate::config::ServerAddr;
-use log::{trace, debug};
+use log::{debug};
 use std::{net::SocketAddr, process::Stdio};
 use tokio::process::Command;
 

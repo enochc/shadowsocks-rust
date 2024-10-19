@@ -16,7 +16,7 @@ use std::{
 use arc_swap::ArcSwap;
 use byte_string::ByteStr;
 use futures::future;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use shadowsocks::{
     config::{Mode, ServerSource},
     plugin::{Plugin, PluginMode},

@@ -42,7 +42,7 @@ use std::{
 use byte_string::ByteStr;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures::ready;
-use log::{trace, debug};
+use log::{debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::{

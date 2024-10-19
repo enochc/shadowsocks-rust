@@ -10,7 +10,7 @@
 /// https://github.com/golang/go/issues/46279
 #[cfg(all(unix, not(target_os = "android")))]
 pub fn adjust_nofile() {
-    use log::{debug, trace};
+    use log::{debug};
     use std::{io::Error, mem};
 
     unsafe {

@@ -11,7 +11,7 @@ use std::{
 };
 
 use hickory_resolver::proto::{error::ProtoError, op::Message};
-use log::{debug, trace};
+use log::{debug};
 use tokio::sync::Mutex;
 
 use shadowsocks::{config::ServerConfig, net::ConnectOpts, relay::socks5::Address};

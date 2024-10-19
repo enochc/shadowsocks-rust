@@ -2,7 +2,7 @@
 
 use std::{io, net::SocketAddr, time::Duration};
 
-use log::{debug, trace};
+use log::{debug};
 use shadowsocks::{
     config::ServerConfig,
     relay::{socks5::Address, tcprelay::utils::copy_encrypted_bidirectional},

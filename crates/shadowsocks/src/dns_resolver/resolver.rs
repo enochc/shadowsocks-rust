@@ -19,7 +19,7 @@ use hickory_resolver::config::ResolverConfig;
 use hickory_resolver::config::ResolverOpts;
 #[cfg(all(feature = "hickory-dns", unix, not(target_os = "android")))]
 use log::error;
-use log::{log_enabled, trace, Level, debug};
+use log::{log_enabled, Level, debug};
 use tokio::net::lookup_host;
 #[cfg(all(feature = "hickory-dns", unix, not(target_os = "android")))]
 use tokio::task::JoinHandle;

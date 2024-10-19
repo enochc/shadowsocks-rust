@@ -14,7 +14,7 @@ use std::{
 
 use byte_string::ByteStr;
 use bytes::{Bytes, BytesMut};
-use log::{info, trace, warn, debug};
+use log::{info, warn, debug};
 use once_cell::sync::Lazy;
 use tokio::{io::ReadBuf, time};
 

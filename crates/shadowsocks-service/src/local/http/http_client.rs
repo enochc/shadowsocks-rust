@@ -18,7 +18,7 @@ use hyper::{
     rt::{Sleep, Timer},
     Request, Response,
 };
-use log::{error, trace, debug};
+use log::{error, debug};
 use lru_time_cache::LruCache;
 use pin_project::pin_project;
 use shadowsocks::relay::Address;

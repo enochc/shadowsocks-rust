@@ -10,7 +10,7 @@ use std::{
 
 use bytes::Bytes;
 use futures::future;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use lru_time_cache::LruCache;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use shadowsocks::{

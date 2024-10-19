@@ -7,7 +7,7 @@ use std::{
     sync::Arc,
 };
 
-use log::{debug, error, trace, warn};
+use log::{debug, error, warn};
 use shadowsocks::{
     config::Mode,
     relay::socks5::{

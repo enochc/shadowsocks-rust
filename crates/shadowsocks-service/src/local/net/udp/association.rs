@@ -12,7 +12,7 @@ use std::{
 use async_trait::async_trait;
 use bytes::Bytes;
 use futures::future;
-use log::{debug, error, trace, warn};
+use log::{debug, error, warn};
 use lru_time_cache::LruCache;
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use tokio::{sync::mpsc, task::JoinHandle, time};

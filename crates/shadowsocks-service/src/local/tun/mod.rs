@@ -12,7 +12,7 @@ use std::{
 use byte_string::ByteStr;
 use cfg_if::cfg_if;
 use ipnet::IpNet;
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use shadowsocks::config::Mode;
 use smoltcp::wire::{IpProtocol, TcpPacket, UdpPacket};
 use tokio::{

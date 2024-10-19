@@ -14,7 +14,7 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, error, trace, warn};
+use log::{debug, error};
 use shadowsocks::{net::TcpSocketOpts, relay::socks5::Address};
 use smoltcp::{
     iface::{Config as InterfaceConfig, Interface, SocketHandle, SocketSet},

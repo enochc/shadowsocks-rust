@@ -22,7 +22,7 @@ use hickory_resolver::{
     },
     AsyncResolver, TokioHandle,
 };
-use log::{trace, debug};
+use log::{debug};
 use tokio::{io::ReadBuf, net::UdpSocket};
 
 use crate::net::{tcp::TcpStream as ShadowTcpStream, udp::UdpSocket as ShadowUdpSocket, ConnectOpts};

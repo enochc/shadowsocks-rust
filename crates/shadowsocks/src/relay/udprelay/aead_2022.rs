@@ -62,7 +62,7 @@ use aes::{
 };
 use byte_string::ByteStr;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-use log::{error, trace, debug};
+use log::{error, debug};
 use lru_time_cache::LruCache;
 
 #[cfg(feature = "aead-cipher-2022-extra")]

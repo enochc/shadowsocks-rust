@@ -8,7 +8,7 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, error, info, trace, warn};
+use log::{debug, error, info, warn};
 use shadowsocks::{
     crypto::CipherKind,
     net::{AcceptOpts, TcpStream as OutboundTcpStream},
