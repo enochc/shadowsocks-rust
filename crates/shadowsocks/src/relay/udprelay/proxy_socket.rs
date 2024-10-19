@@ -14,7 +14,7 @@ use std::{
 
 use byte_string::ByteStr;
 use bytes::{Bytes, BytesMut};
-use log::{info, trace, warn};
+use log::{info, trace, warn, debug};
 use once_cell::sync::Lazy;
 use tokio::{io::ReadBuf, time};
 
@@ -107,7 +107,7 @@ impl ProxySocket<ShadowUdpSocket> {
 
         let socket = ShadowUdpSocket::connect_server_with_opts(&context, svr_cfg.udp_external_addr(), opts).await?;
 
-        trace!(
+        debug!(
             "connected udp remote {} (outbound: {}) with {:?}",
             svr_cfg.addr(),
             svr_cfg.udp_external_addr(),
@@ -226,7 +226,7 @@ where
                 let mut key = self.key.as_ref();
 
                 if let Some(ref user) = control.user {
-                    trace!("udp encrypt with {:?} identity", user);
+                    debug!("udp encrypt with {:?} identity", user);
                     key = user.key();
                 }
 
@@ -255,7 +255,7 @@ where
         let mut send_buf = BytesMut::new();
         self.encrypt_send_buffer(addr, control, &self.identity_keys, payload, &mut send_buf)?;
 
-        trace!(
+        debug!(
             "UDP server client send to {}, control: {:?}, payload length {} bytes, packet length {} bytes",
             addr,
             control,
@@ -308,7 +308,7 @@ where
 
         self.encrypt_send_buffer(addr, control, &self.identity_keys, payload, &mut send_buf)?;
 
-        trace!(
+        debug!(
             "UDP server client send to {}, control: {:?}, payload length {} bytes, packet length {} bytes",
             addr,
             control,
@@ -407,7 +407,7 @@ where
         let mut send_buf = BytesMut::new();
         self.encrypt_send_buffer(addr, control, &self.identity_keys, payload, &mut send_buf)?;
 
-        trace!(
+        debug!(
             "UDP server client send_to to, addr {}, control: {:?}, payload length {} bytes, packet length {} bytes",
             addr,
             control,
@@ -485,7 +485,7 @@ where
             Err(err) => return Err(ProxySocketError::ProtocolError(err)),
         };
 
-        trace!(
+        debug!(
             "UDP server client receive from {}, control: {:?}, packet length {} bytes, payload length {} bytes",
             addr,
             control,
@@ -533,7 +533,7 @@ where
             Err(err) => return Err(ProxySocketError::ProtocolErrorWithPeer(target_addr, err)),
         };
 
-        trace!(
+        debug!(
             "UDP server client receive from {}, addr {}, control: {:?}, packet length {} bytes, payload length {} bytes",
             target_addr,
             addr,

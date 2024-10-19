@@ -62,7 +62,7 @@ use aes::{
 };
 use byte_string::ByteStr;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
-use log::{error, trace};
+use log::{error, trace, debug};
 use lru_time_cache::LruCache;
 
 #[cfg(feature = "aead-cipher-2022-extra")]
@@ -334,7 +334,7 @@ fn decrypt_message(
 
                     let session_id_packet_id = &packet_header[0..16];
 
-                    trace!(
+                    debug!(
                         "server EIH {:?}, session_id_packet_id: {:?}",
                         ByteStr::new(eih),
                         ByteStr::new(session_id_packet_id)
@@ -362,7 +362,7 @@ fn decrypt_message(
                             return Err(ProtocolError::InvalidClientUser(Bytes::copy_from_slice(eih)));
                         }
                         Some(user) => {
-                            trace!("{:?} chosen by EIH", user);
+                            debug!("{:?} chosen by EIH", user);
                             let cipher = get_cipher(method, user.key(), session_id);
                             client_user = Some(user);
                             cipher
@@ -436,7 +436,7 @@ pub fn encrypt_client_payload_aead_2022(
         let nonce = &mut dst[..nonce_size];
 
         context.generate_nonce(method, nonce, false);
-        trace!("UDP packet generated aead nonce {:?}", ByteStr::new(nonce));
+        debug!("UDP packet generated aead nonce {:?}", ByteStr::new(nonce));
     }
 
     // Add header fields
@@ -475,7 +475,7 @@ pub fn encrypt_client_payload_aead_2022(
                 _ => unreachable!("{} doesn't support EIH", method),
             }
 
-            trace!(
+            debug!(
                 "client EIH {:?}, hash: {:?}",
                 ByteStr::new(identity_header),
                 ByteStr::new(plain_text)
@@ -606,7 +606,7 @@ pub fn encrypt_server_payload_aead_2022(
         let nonce = &mut dst[..nonce_size];
 
         context.generate_nonce(method, nonce, false);
-        trace!("UDP packet generated aead nonce {:?}", ByteStr::new(nonce));
+        debug!("UDP packet generated aead nonce {:?}", ByteStr::new(nonce));
     }
 
     // Add header fields

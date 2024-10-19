@@ -82,7 +82,7 @@ macro_rules! map_domain_ip {
                                 let _ = $self
                                     .db
                                     .compare_and_swap(&name2ip_key, name2ip_value.as_ref(), Some(nv));
-                                trace!(
+                                debug!(
                                     "fakedns mapping {} -> {}, expires {}",
                                     $domain,
                                     i,
@@ -132,7 +132,7 @@ macro_rules! map_domain_ip {
                             .db
                             .compare_and_swap(&name2ip_key, name2ip_value.as_ref(), Some(nv))
                         {
-                            trace!(
+                            debug!(
                                 "fakedns mapping {} -> {}, expires {} created",
                                 $domain,
                                 ip,
@@ -203,7 +203,7 @@ impl FakeDnsManager {
             let v = c.encode_to_vec()?;
             db.insert(key, v)?;
 
-            trace!("FakeDNS database created. {:?}", c);
+            debug!("FakeDNS database created. {:?}", c);
         }
 
         Ok(FakeDnsManager {

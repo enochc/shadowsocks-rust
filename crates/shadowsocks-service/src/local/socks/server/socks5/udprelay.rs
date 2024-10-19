@@ -201,7 +201,7 @@ impl Socks5UdpServer {
                     let pos = cur.position() as usize;
                     let payload = &data[pos..];
 
-                    trace!(
+                    debug!(
                         "UDP ASSOCIATE {} -> {}, {} bytes",
                         peer_addr,
                         header.address,

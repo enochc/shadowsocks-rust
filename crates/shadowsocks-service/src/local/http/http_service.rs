@@ -52,7 +52,7 @@ impl HttpService {
         self,
         mut req: Request<body::Incoming>,
     ) -> hyper::Result<Response<BoxBody<Bytes, hyper::Error>>> {
-        trace!("request {} {:?}", self.peer_addr, req);
+        debug!("request {} {:?}", self.peer_addr, req);
 
         // Parse URI
         //
@@ -64,7 +64,7 @@ impl HttpService {
                     error!("HTTP {} URI {} doesn't have a valid host", req.method(), req.uri());
                     return make_bad_request();
                 } else {
-                    trace!("HTTP {} URI {} doesn't have a valid host", req.method(), req.uri());
+                    debug!("HTTP {} URI {} doesn't have a valid host", req.method(), req.uri());
                 }
 
                 match get_addr_from_header(&mut req) {
@@ -103,7 +103,7 @@ impl HttpService {
             tokio::spawn(async move {
                 match hyper::upgrade::on(req).await {
                     Ok(upgraded) => {
-                        trace!("CONNECT tunnel upgrade success, {} <-> {}", client_addr, host);
+                        debug!("CONNECT tunnel upgrade success, {} <-> {}", client_addr, host);
 
                         let mut upgraded_io = TokioIo::new(upgraded);
 
@@ -160,7 +160,7 @@ impl HttpService {
             }
         };
 
-        trace!("received {} <- {} {:?}", self.peer_addr, host, res);
+        debug!("received {} <- {} {:?}", self.peer_addr, host, res);
 
         let res_keep_alive = conn_keep_alive && check_keep_alive(res.version(), res.headers(), false);
 
@@ -169,14 +169,14 @@ impl HttpService {
 
         if res.version() != version {
             // Reset version to matches req's version
-            trace!("response version {:?} => {:?}", res.version(), version);
+            debug!("response version {:?} => {:?}", res.version(), version);
             *res.version_mut() = version;
         }
 
         // Set Connection header
         set_conn_keep_alive(res.version(), res.headers_mut(), res_keep_alive);
 
-        trace!("response {} <- {} {:?}", self.peer_addr, host, res);
+        debug!("response {} <- {} {:?}", self.peer_addr, host, res);
 
         debug!("HTTP {} relay {} <-> {} finished", method, self.peer_addr, host);
 
@@ -273,7 +273,7 @@ fn get_addr_from_header(req: &mut Request<body::Incoming>) -> Result<Address, ()
                 match Authority::from_str(shost) {
                     Ok(authority) => match authority_addr(req.uri().scheme_str(), &authority) {
                         Some(host) => {
-                            trace!("HTTP {} URI {} got host from header: {}", req.method(), req.uri(), host);
+                            debug!("HTTP {} URI {} got host from header: {}", req.method(), req.uri(), host);
 
                             // Reassemble URI
                             let mut parts = req.uri().clone().into_parts();

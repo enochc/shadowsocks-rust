@@ -74,7 +74,7 @@ impl FakeDnsTcpServer {
                 }
             };
 
-            trace!("Fake DNS accepted TCP client {}", peer_addr);
+            debug!("Fake DNS accepted TCP client {}", peer_addr);
 
             let context = self.context.clone();
             let manager = self.manager.clone();

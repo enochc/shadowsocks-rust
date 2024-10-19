@@ -7,7 +7,7 @@ use std::{
     path::Path,
 };
 
-use log::trace;
+use log::debug;
 use serde::Deserialize;
 
 #[derive(Deserialize, Debug)]
@@ -57,7 +57,7 @@ impl Socks5AuthConfig {
     pub fn load_from_file<P: AsRef<Path> + ?Sized>(filename: &P) -> io::Result<Socks5AuthConfig> {
         let filename = filename.as_ref();
 
-        trace!(
+        debug!(
             "loading socks5 authentication configuration from {}",
             filename.display()
         );

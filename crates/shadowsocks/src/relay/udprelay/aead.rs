@@ -15,7 +15,7 @@ use std::io::Cursor;
 
 use byte_string::ByteStr;
 use bytes::{BufMut, BytesMut};
-use log::trace;
+use log::{trace, debug};
 
 use crate::{
     context::Context,
@@ -60,7 +60,7 @@ pub fn encrypt_payload_aead(
 
     if salt_len > 0 {
         context.generate_nonce(method, salt, false);
-        trace!("UDP packet generated aead salt {:?}", ByteStr::new(salt));
+        debug!("UDP packet generated aead salt {:?}", ByteStr::new(salt));
     }
 
     let mut cipher = Cipher::new(method, key, salt);
@@ -92,7 +92,7 @@ pub fn decrypt_payload_aead(
     let (salt, data) = payload.split_at_mut(salt_len);
     // context.check_nonce_replay(salt)?;
 
-    trace!("UDP packet got AEAD salt {:?}", ByteStr::new(salt));
+    debug!("UDP packet got AEAD salt {:?}", ByteStr::new(salt));
 
     let mut cipher = Cipher::new(method, key, salt);
     let tag_len = cipher.tag_len();

@@ -8,7 +8,7 @@ use std::{
 };
 
 use futures::future;
-use log::{error, trace};
+use log::{error, debug};
 use shadowsocks::{
     config::{ManagerAddr, ServerConfig},
     dns_resolver::DnsResolver,
@@ -240,7 +240,7 @@ impl Server {
                                     manager_addr, err, req
                                 );
                             } else {
-                                trace!("report to manager {}, {:?}", manager_addr, req);
+                                debug!("report to manager {}, {:?}", manager_addr, req);
                             }
                         }
                     }

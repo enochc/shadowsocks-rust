@@ -170,7 +170,7 @@ impl UdpServer {
             orx_opt = Some(orx);
 
             other_receivers.reserve(cpus - 1);
-            trace!("udp server starting extra {} recv workers", cpus - 1);
+            debug!("udp server starting extra {} recv workers", cpus - 1);
 
             for _ in 1..cpus {
                 let otx = otx.clone();
@@ -514,7 +514,7 @@ impl UdpAssociationContext {
                     let (peer_addr, target_addr, data, control) = match packet_received_opt {
                         Some(d) => d,
                         None => {
-                            trace!("udp association for {} -> ... channel closed", self.peer_addr);
+                            debug!("udp association for {} -> ... channel closed", self.peer_addr);
                             break;
                         }
                     };
@@ -606,7 +606,7 @@ impl UdpAssociationContext {
             }
         }
 
-        trace!(
+        debug!(
             "udp relay {} -> {} with {} bytes, control: {:?}",
             self.peer_addr,
             target_addr,
@@ -730,7 +730,7 @@ impl UdpAssociationContext {
     }
 
     async fn send_received_respond_packet(&mut self, mut addr: Address, data: &[u8]) {
-        trace!("udp relay {} <- {} received {} bytes", self.peer_addr, addr, data.len());
+        debug!("udp relay {} <- {} received {} bytes", self.peer_addr, addr, data.len());
 
         // Keep association alive in map
         self.keepalive_flag = true;
@@ -758,7 +758,7 @@ impl UdpAssociationContext {
                         err
                     );
                 } else {
-                    trace!("udp relay {} <- {} with {} bytes", self.peer_addr, addr, data.len());
+                    debug!("udp relay {} <- {} with {} bytes", self.peer_addr, addr, data.len());
                 }
             }
             Some(ref client_session) => {
@@ -802,7 +802,7 @@ impl UdpAssociationContext {
                         err
                     );
                 } else {
-                    trace!(
+                    debug!(
                         "udp relay {} <- {} with {} bytes, control {:?}",
                         self.peer_addr,
                         addr,

@@ -133,7 +133,7 @@ impl RedirTcpServer {
                 }
             };
 
-            trace!("got connection {}", peer_addr);
+            debug!("got connection {}", peer_addr);
 
             let context = self.context.clone();
             let balancer = self.balancer.clone();

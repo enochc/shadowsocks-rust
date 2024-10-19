@@ -144,7 +144,7 @@ impl DnsClient {
         // Make a random ID
         msg.set_id(thread_rng().gen());
 
-        trace!("DNS lookup {:?}", msg);
+        debug!("DNS lookup {:?}", msg);
 
         match *self {
             DnsClient::TcpLocal { ref mut stream } => stream_query(stream, msg).await,

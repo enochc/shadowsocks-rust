@@ -110,7 +110,7 @@ impl OnlineConfigService {
             }
         };
 
-        trace!("sever-loader task fetch response: {:?}", rsp);
+        debug!("sever-loader task fetch response: {:?}", rsp);
 
         let fetch_time = Instant::now();
 
@@ -137,7 +137,7 @@ impl OnlineConfigService {
                             && content_type.subtype() == mime::JSON
                             && content_type.get_param(mime::CHARSET) == Some(mime::UTF_8)
                         {
-                            trace!("checked Content-Type: {:?}", h);
+                            debug!("checked Content-Type: {:?}", h);
                         } else {
                             warn!(
                                 "Content-Type is not \"application/json; charset=utf-8\", which is mandatory in standard SIP008. found {:?}",

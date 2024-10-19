@@ -4,7 +4,7 @@
 
 use std::{io, sync::Arc};
 
-use log::trace;
+use log::debug;
 use shadowsocks::net::{AcceptOpts, ConnectOpts};
 
 use crate::{
@@ -21,7 +21,7 @@ pub mod server;
 pub async fn run(config: Config) -> io::Result<()> {
     assert_eq!(config.config_type, ConfigType::Manager);
 
-    trace!("{:?}", config);
+    debug!("{:?}", config);
 
     #[cfg(all(unix, not(target_os = "android")))]
     if let Some(nofile) = config.nofile {

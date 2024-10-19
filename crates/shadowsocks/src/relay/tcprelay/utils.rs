@@ -252,7 +252,7 @@ where
             Poll::Ready(r) => {
                 match r {
                     Ok(..) => {
-                        trace!(
+                        debug!(
                             "copy bidirection ends, a_to_b: {:?}, b_to_a: {:?}",
                             self.a_to_b,
                             self.b_to_a

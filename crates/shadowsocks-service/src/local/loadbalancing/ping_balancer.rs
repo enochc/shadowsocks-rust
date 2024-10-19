@@ -106,7 +106,7 @@ impl PingBalancerBuilder {
 
     fn find_best_idx(servers: &[Arc<ServerIdent>], mode: Mode) -> (usize, usize) {
         if servers.is_empty() {
-            trace!("init without any TCP and UDP servers");
+            debug!("init without any TCP and UDP servers");
             return (0, 0);
         }
 
@@ -129,7 +129,7 @@ impl PingBalancerBuilder {
                     ServerConfigFormatter::new(servers[best_tcp_idx].server_config())
                 );
             } else {
-                trace!(
+                debug!(
                     "init chose TCP server {}",
                     ServerConfigFormatter::new(servers[best_tcp_idx].server_config())
                 );
@@ -152,7 +152,7 @@ impl PingBalancerBuilder {
                     ServerConfigFormatter::new(servers[best_udp_idx].server_config())
                 );
             } else {
-                trace!(
+                debug!(
                     "init chose UDP server {}",
                     ServerConfigFormatter::new(servers[best_udp_idx].server_config())
                 );
@@ -638,7 +638,7 @@ impl PingBalancerContext {
 
             self.best_task_notify.notify_one();
 
-            trace!("finished initializing server scores");
+            debug!("finished initializing server scores");
         }
 
         loop {
@@ -674,7 +674,7 @@ struct PingBalancerInner {
 
 impl Drop for PingBalancerInner {
     fn drop(&mut self) {
-        trace!("ping balancer stopped");
+        debug!("ping balancer stopped");
     }
 }
 
@@ -741,7 +741,7 @@ impl PingBalancer {
             }
         }
 
-        trace!(
+        debug!(
             "ping balancer going to replace {} servers (total: {}) with {} servers, sources: {:?}",
             old_context.servers.len() - old_servers.len(),
             old_context.servers.len(),
@@ -771,7 +771,7 @@ impl PingBalancer {
             )));
         }
 
-        trace!("ping balancer merged {} new servers", servers.len());
+        debug!("ping balancer merged {} new servers", servers.len());
 
         let (shared_context, task_abortable) = PingBalancerContext::new(
             servers,
@@ -991,7 +991,7 @@ impl PingChecker {
         match res {
             Ok(Ok(..)) => {
                 // Got the result ... record its time
-                trace!(
+                debug!(
                     "checked remote {} server {} latency with {} ms",
                     self.server_type,
                     ServerConfigFormatter::new(self.server.server_config()),
@@ -1014,7 +1014,7 @@ impl PingChecker {
                 use std::io::ErrorKind;
 
                 // Timeout
-                trace!(
+                debug!(
                     "checked remote {} server {} latency timeout, elapsed {} ms",
                     self.server_type,
                     ServerConfigFormatter::new(self.server.server_config()),

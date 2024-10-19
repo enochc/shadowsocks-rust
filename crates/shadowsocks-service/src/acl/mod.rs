@@ -15,7 +15,7 @@ use std::{
 
 use ipnet::{IpNet, Ipv4Net, Ipv6Net};
 use iprange::IpRange;
-use log::{trace, warn};
+use log::{trace, warn, debug};
 use once_cell::sync::Lazy;
 use regex::bytes::{Regex, RegexBuilder, RegexSet, RegexSetBuilder};
 
@@ -179,13 +179,13 @@ impl ParsingRules {
 
     fn add_ipv4_rule(&mut self, rule: impl Into<Ipv4Net>) {
         let rule = rule.into();
-        trace!("IPV4-RULE {}", rule);
+        debug!("IPV4-RULE {}", rule);
         self.ipv4.add(rule);
     }
 
     fn add_ipv6_rule(&mut self, rule: impl Into<Ipv6Net>) {
         let rule = rule.into();
-        trace!("IPV6-RULE {}", rule);
+        debug!("IPV6-RULE {}", rule);
         self.ipv6.add(rule);
     }
 
@@ -204,7 +204,7 @@ impl ParsingRules {
                 if let Ok(tree_rule) = str::from_utf8(tree_rule.as_bytes()) {
                     let tree_rule = tree_rule.replace("\\.", ".");
                     if self.add_tree_rule_inner(&tree_rule).is_ok() {
-                        trace!("REGEX-RULE {} => TREE-RULE {}", rule, tree_rule);
+                        debug!("REGEX-RULE {} => TREE-RULE {}", rule, tree_rule);
                         return;
                     }
                 }
@@ -212,14 +212,14 @@ impl ParsingRules {
                 if let Ok(set_rule) = str::from_utf8(set_rule.as_bytes()) {
                     let set_rule = set_rule.replace("\\.", ".");
                     if self.add_set_rule_inner(&set_rule).is_ok() {
-                        trace!("REGEX-RULE {} => SET-RULE {}", rule, set_rule);
+                        debug!("REGEX-RULE {} => SET-RULE {}", rule, set_rule);
                         return;
                     }
                 }
             }
         }
 
-        trace!("REGEX-RULE {}", rule);
+        debug!("REGEX-RULE {}", rule);
 
         rule.make_ascii_lowercase();
 
@@ -230,7 +230,7 @@ impl ParsingRules {
 
     #[inline]
     fn add_set_rule(&mut self, rule: &str) -> io::Result<()> {
-        trace!("SET-RULE {}", rule);
+        debug!("SET-RULE {}", rule);
         self.add_set_rule_inner(rule)
     }
 
@@ -241,7 +241,7 @@ impl ParsingRules {
 
     #[inline]
     fn add_tree_rule(&mut self, rule: &str) -> io::Result<()> {
-        trace!("TREE-RULE {}", rule);
+        debug!("TREE-RULE {}", rule);
         self.add_tree_rule_inner(rule)
     }
 
@@ -344,7 +344,7 @@ pub struct AccessControl {
 impl AccessControl {
     /// Load ACL rules from a file
     pub fn load_from_file<P: AsRef<Path>>(p: P) -> io::Result<AccessControl> {
-        trace!("ACL loading from {:?}", p.as_ref());
+        debug!("ACL loading from {:?}", p.as_ref());
 
         let file_path_ref = p.as_ref();
         let file_path = file_path_ref.to_path_buf();
@@ -359,7 +359,7 @@ impl AccessControl {
         let mut proxy = ParsingRules::new("[white_list] or [proxy_list]");
         let mut curr = &mut bypass;
 
-        trace!("ACL parsing start from mode {:?} and black_list / bypass_list", mode);
+        debug!("ACL parsing start from mode {:?} and black_list / bypass_list", mode);
 
         for line in r.lines() {
             let line = line?;
@@ -392,23 +392,23 @@ impl AccessControl {
             match line {
                 "[reject_all]" | "[bypass_all]" => {
                     mode = Mode::WhiteList;
-                    trace!("switch to mode {:?}", mode);
+                    debug!("switch to mode {:?}", mode);
                 }
                 "[accept_all]" | "[proxy_all]" => {
                     mode = Mode::BlackList;
-                    trace!("switch to mode {:?}", mode);
+                    debug!("switch to mode {:?}", mode);
                 }
                 "[outbound_block_list]" => {
                     curr = &mut outbound_block;
-                    trace!("loading outbound_block_list");
+                    debug!("loading outbound_block_list");
                 }
                 "[black_list]" | "[bypass_list]" => {
                     curr = &mut bypass;
-                    trace!("loading black_list / bypass_list");
+                    debug!("loading black_list / bypass_list");
                 }
                 "[white_list]" | "[proxy_list]" => {
                     curr = &mut proxy;
-                    trace!("loading white_list / proxy_list");
+                    debug!("loading white_list / proxy_list");
                 }
                 _ => {
                     match line.parse::<IpNet>() {

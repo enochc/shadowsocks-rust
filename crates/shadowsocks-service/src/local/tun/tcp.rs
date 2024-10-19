@@ -14,7 +14,7 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use shadowsocks::{net::TcpSocketOpts, relay::socks5::Address};
 use smoltcp::{
     iface::{Config as InterfaceConfig, Interface, SocketHandle, SocketSet},
@@ -327,7 +327,7 @@ impl TcpTun {
                         let updated_sockets = iface.poll(before_poll, device, &mut socket_set);
 
                         if updated_sockets {
-                            trace!("VirtDevice::poll costed {}", SmolInstant::now() - before_poll);
+                            debug!("VirtDevice::poll costed {}", SmolInstant::now() - before_poll);
                         }
 
                         // Check all the sockets' status
@@ -352,13 +352,13 @@ impl TcpTun {
                                     waker.wake();
                                 }
 
-                                trace!("closed TCP connection");
+                                debug!("closed TCP connection");
                                 continue;
                             }
 
                             // SHUT_WR
                             if matches!(control.send_state, TcpSocketState::Close) {
-                                trace!("closing TCP Write Half, {:?}", socket.state());
+                                debug!("closing TCP Write Half, {:?}", socket.state());
 
                                 // Close the socket. Set to FIN state
                                 socket.close();
@@ -409,7 +409,7 @@ impl TcpTun {
                                         | TcpState::FinWait2
                                 )
                             {
-                                trace!("closed TCP Read Half, {:?}", socket.state());
+                                debug!("closed TCP Read Half, {:?}", socket.state());
 
                                 // Let TcpConnection::poll_read returns EOF.
                                 control.recv_state = TcpSocketState::Closed;
@@ -473,7 +473,7 @@ impl TcpTun {
                         }
                     }
 
-                    trace!("VirtDevice::poll thread exited");
+                    debug!("VirtDevice::poll thread exited");
                 })
                 .unwrap()
         };

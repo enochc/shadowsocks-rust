@@ -58,7 +58,7 @@ where
                 // Timeout. Send handshake to server.
                 let _ = shadow.write(&[]).await?;
 
-                trace!(
+                debug!(
                     "tcp tunnel {} -> {} (proxied) sent handshake without data",
                     peer_addr,
                     target_addr
@@ -69,7 +69,7 @@ where
 
     match copy_encrypted_bidirectional(svr_cfg.method(), shadow, plain).await {
         Ok((wn, rn)) => {
-            trace!(
+            debug!(
                 "tcp tunnel {} <-> {} (proxied) closed, L2R {} bytes, R2L {} bytes",
                 peer_addr,
                 target_addr,
@@ -78,7 +78,7 @@ where
             );
         }
         Err(err) => {
-            trace!(
+            debug!(
                 "tcp tunnel {} <-> {} (proxied) closed with error: {}",
                 peer_addr,
                 target_addr,
@@ -104,7 +104,7 @@ where
 
     match copy_bidirectional(plain, shadow).await {
         Ok((rn, wn)) => {
-            trace!(
+            debug!(
                 "tcp tunnel {} <-> {} (bypassed) closed, L2R {} bytes, R2L {} bytes",
                 peer_addr,
                 target_addr,
@@ -113,7 +113,7 @@ where
             );
         }
         Err(err) => {
-            trace!(
+            debug!(
                 "tcp tunnel {} <-> {} (bypassed) closed with error: {}",
                 peer_addr,
                 target_addr,

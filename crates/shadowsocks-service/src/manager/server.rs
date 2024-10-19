@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::{collections::HashMap, io, net::SocketAddr, sync::Arc, time::Duration};
 
-use log::{error, info, trace};
+use log::{error, info, debug};
 use shadowsocks::{
     config::{Mode, ServerConfig, ServerType, ServerUser, ServerUserManager},
     context::{Context, SharedContext},
@@ -203,7 +203,7 @@ impl Manager {
                 }
             };
 
-            trace!("received {:?} from {:?}", req, peer_addr);
+            debug!("received {:?} from {:?}", req, peer_addr);
 
             match req {
                 ManagerRequest::Add(ref req) => match self.handle_add(req).await {
@@ -393,7 +393,7 @@ impl Manager {
         let mut config = Config::new(ConfigType::Server);
         config.server.push(server_instance);
 
-        trace!("created standalone server with config {:?}", config);
+        debug!("created standalone server with config {:?}", config);
 
         let config_file_content = format!("{config}");
 
@@ -658,7 +658,7 @@ impl Manager {
                             continue;
                         }
                         Ok(config) => {
-                            trace!(
+                            debug!(
                                 "loaded {} for server port {}, {:?}",
                                 server_config_path.display(),
                                 *port,

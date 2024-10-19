@@ -47,7 +47,7 @@ impl Socks4TcpHandler {
         let handshake_req = match HandshakeRequest::read_from(&mut s).await {
             Ok(r) => r,
             Err(Socks4Error::IoError(ref err)) if err.kind() == ErrorKind::UnexpectedEof => {
-                trace!("socks4 handshake early eof. peer: {}", peer_addr);
+                debug!("socks4 handshake early eof. peer: {}", peer_addr);
                 return Ok(());
             }
             Err(err) => {
@@ -56,7 +56,7 @@ impl Socks4TcpHandler {
             }
         };
 
-        trace!("socks4 {:?} peer: {}", handshake_req, peer_addr);
+        debug!("socks4 {:?} peer: {}", handshake_req, peer_addr);
 
         match handshake_req.cd {
             Command::Connect => {
@@ -115,7 +115,7 @@ impl Socks4TcpHandler {
                 let handshake_rsp = HandshakeResponse::new(ResultCode::RequestGranted);
                 handshake_rsp.write_to(&mut stream).await?;
 
-                trace!("sent header: {:?}", handshake_rsp);
+                debug!("sent header: {:?}", handshake_rsp);
 
                 remote
             }

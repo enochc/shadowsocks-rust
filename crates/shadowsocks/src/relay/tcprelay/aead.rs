@@ -42,7 +42,7 @@ use std::{
 use byte_string::ByteStr;
 use bytes::{BufMut, Bytes, BytesMut};
 use futures::ready;
-use log::trace;
+use log::{trace, debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::{
@@ -201,7 +201,7 @@ impl DecryptedReader {
         // If we check salt right here will allow attacker to flood our filter and eventually block all of our legitimate clients' requests.
         self.salt = Some(Bytes::copy_from_slice(salt));
 
-        trace!("got AEAD salt {:?}", ByteStr::new(salt));
+        debug!("got AEAD salt {:?}", ByteStr::new(salt));
 
         let cipher = Cipher::new(self.method, key, salt);
 

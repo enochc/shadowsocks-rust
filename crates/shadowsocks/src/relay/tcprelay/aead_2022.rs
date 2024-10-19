@@ -60,7 +60,7 @@ use aes::{
 use byte_string::ByteStr;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use futures::ready;
-use log::{error, trace};
+use log::{error, trace, debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use super::{crypto_io::StreamType, proxy_stream::protocol::v2::SERVER_STREAM_TIMESTAMP_MAX_DIFF};
@@ -293,7 +293,7 @@ impl DecryptedReader {
 
         let (salt, mut header_chunk) = header_buf.split_at_mut(salt_len);
 
-        trace!("got AEAD salt {:?}", ByteStr::new(salt));
+        debug!("got AEAD salt {:?}", ByteStr::new(salt));
 
         // Extensible Identity Header
         // https://github.com/Shadowsocks-NET/shadowsocks-specs/blob/main/2022-2-shadowsocks-2022-extensible-identity-headers.md
@@ -324,7 +324,7 @@ impl DecryptedReader {
                 }
 
                 let user_hash = user_hash.as_slice();
-                trace!(
+                debug!(
                     "server EIH {:?}, hash: {:?}",
                     ByteStr::new(eih),
                     ByteStr::new(user_hash)
@@ -335,7 +335,7 @@ impl DecryptedReader {
                         return Err(ProtocolError::InvalidClientUser(Bytes::copy_from_slice(user_hash))).into();
                     }
                     Some(user) => {
-                        trace!("{:?} chosen by EIH", user);
+                        debug!("{:?} chosen by EIH", user);
                         self.user_key = Some(Bytes::copy_from_slice(user.key()));
                         TcpCipher::new(self.method, user.key(), salt)
                     }
@@ -379,7 +379,7 @@ impl DecryptedReader {
 
         let data_length = header_reader.get_u16();
 
-        trace!(
+        debug!(
             "got AEAD header stream_type: {}, timestamp: {}, length: {}, request_salt: {:?}",
             stream_ty,
             timestamp,
@@ -561,7 +561,7 @@ impl EncryptedWriter {
                     let mut block = Block::from([0u8; 16]);
                     cipher.encrypt_block_b2b(ipsk_plain_text, &mut block);
 
-                    trace!(
+                    debug!(
                         "client EIH {:?}, hash: {:?}",
                         ByteStr::new(block.as_slice()),
                         ByteStr::new(ipsk_plain_text)
@@ -576,7 +576,7 @@ impl EncryptedWriter {
                     let mut block = Block::from([0u8; 16]);
                     cipher.encrypt_block_b2b(ipsk_plain_text, &mut block);
 
-                    trace!(
+                    debug!(
                         "client EIH {:?}, hash: {:?}",
                         ByteStr::new(block.as_slice()),
                         ByteStr::new(ipsk_plain_text)

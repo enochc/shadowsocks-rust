@@ -178,7 +178,7 @@ fn store_dns(res: Message, port: u16) -> Vec<SocketAddr> {
             Some(RData::A(addr)) => vaddr.push(SocketAddr::new(Ipv4Addr::from(*addr).into(), port)),
             Some(RData::AAAA(addr)) => vaddr.push(SocketAddr::new(Ipv6Addr::from(*addr).into(), port)),
             Some(rdata) => {
-                trace!("skipped rdata {:?}", rdata);
+                debug!("skipped rdata {:?}", rdata);
             }
             None => {}
         }

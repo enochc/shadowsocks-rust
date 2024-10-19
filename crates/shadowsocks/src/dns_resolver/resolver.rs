@@ -19,7 +19,7 @@ use hickory_resolver::config::ResolverConfig;
 use hickory_resolver::config::ResolverOpts;
 #[cfg(all(feature = "hickory-dns", unix, not(target_os = "android")))]
 use log::error;
-use log::{log_enabled, trace, Level};
+use log::{log_enabled, trace, Level, debug};
 use tokio::net::lookup_host;
 #[cfg(all(feature = "hickory-dns", unix, not(target_os = "android")))]
 use tokio::task::JoinHandle;
@@ -160,7 +160,7 @@ async fn hickory_dns_notify_update_dns(resolver: Arc<HickoryDnsSystemResolver>) 
     static DNS_RESOLV_FILE_PATH: &str = "/etc/resolv.conf";
 
     if !Path::new(DNS_RESOLV_FILE_PATH).exists() {
-        trace!("resolv file {DNS_RESOLV_FILE_PATH} doesn't exist");
+        debug!("resolv file {DNS_RESOLV_FILE_PATH} doesn't exist");
         return Ok(());
     }
 
@@ -169,7 +169,7 @@ async fn hickory_dns_notify_update_dns(resolver: Arc<HickoryDnsSystemResolver>) 
     let mut watcher: RecommendedWatcher =
         notify::recommended_watcher(move |ev_result: NotifyResult<Event>| match ev_result {
             Ok(ev) => {
-                trace!("received {DNS_RESOLV_FILE_PATH} event {ev:?}");
+                debug!("received {DNS_RESOLV_FILE_PATH} event {ev:?}");
 
                 if let EventKind::Modify(..) = ev.kind {
                     tx.send(ev).expect("watcher.send");
@@ -187,7 +187,7 @@ async fn hickory_dns_notify_update_dns(resolver: Arc<HickoryDnsSystemResolver>) 
     let mut update_task: Option<JoinHandle<()>> = None;
 
     while rx.changed().await.is_ok() {
-        trace!("received notify {DNS_RESOLV_FILE_PATH} changed");
+        debug!("received notify {DNS_RESOLV_FILE_PATH} changed");
 
         // Kill the pending task
         if let Some(t) = update_task.take() {
@@ -320,7 +320,7 @@ impl DnsResolver {
 
                         match *self.resolver {
                             DnsResolver::System => {
-                                trace!(
+                                debug!(
                                     "DNS resolved {}:{} with tokio {}s",
                                     self.addr,
                                     self.port,
@@ -329,7 +329,7 @@ impl DnsResolver {
                             }
                             #[cfg(feature = "hickory-dns")]
                             DnsResolver::HickoryDnsSystem { .. } | DnsResolver::HickoryDns(..) => {
-                                trace!(
+                                debug!(
                                     "DNS resolved {}:{} with hickory-dns {}s",
                                     self.addr,
                                     self.port,
@@ -337,7 +337,7 @@ impl DnsResolver {
                                 );
                             }
                             DnsResolver::Custom(..) => {
-                                trace!(
+                                debug!(
                                     "DNS resolved {}:{} with customized {}s",
                                     self.addr,
                                     self.port,
@@ -348,14 +348,14 @@ impl DnsResolver {
                     }
                     None => match *self.resolver {
                         DnsResolver::System => {
-                            trace!("DNS resolved {}:{} with tokio", self.addr, self.port);
+                            debug!("DNS resolved {}:{} with tokio", self.addr, self.port);
                         }
                         #[cfg(feature = "hickory-dns")]
                         DnsResolver::HickoryDnsSystem { .. } | DnsResolver::HickoryDns(..) => {
-                            trace!("DNS resolved {}:{} with hickory-dns", self.addr, self.port);
+                            debug!("DNS resolved {}:{} with hickory-dns", self.addr, self.port);
                         }
                         DnsResolver::Custom(..) => {
-                            trace!("DNS resolved {}:{} with customized", self.addr, self.port);
+                            debug!("DNS resolved {}:{} with customized", self.addr, self.port);
                         }
                     },
                 }

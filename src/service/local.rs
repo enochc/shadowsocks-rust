@@ -11,7 +11,7 @@ use std::{
 
 use clap::{builder::PossibleValuesParser, Arg, ArgAction, ArgGroup, ArgMatches, Command, ValueHint};
 use futures::future::{self, FutureExt};
-use log::{error, info, trace};
+use log::{error, info, debug};
 use tokio::{
     self,
     runtime::{Builder, Runtime},
@@ -614,7 +614,7 @@ pub fn create(matches: &ArgMatches) -> Result<(Runtime, impl Future<Output = Exi
             }
         }
 
-        trace!("{:?}", service_config);
+        debug!("{:?}", service_config);
 
         let mut config = match config_path_opt {
             Some(cpath) => match Config::load_from_file(&cpath, ConfigType::Local) {
@@ -1041,7 +1041,7 @@ pub fn create(matches: &ArgMatches) -> Result<(Runtime, impl Future<Output = Exi
                 }
                 _ = reload_task => {
                     // continue.
-                    trace!("server-loader task task exited");
+                    debug!("server-loader task task exited");
                 }
             }
         }

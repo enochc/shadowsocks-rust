@@ -6,7 +6,7 @@ use std::{
     task::{self, Poll},
 };
 
-use log::trace;
+use log::debug;
 use pin_project::pin_project;
 use tokio::{
     io::{AsyncRead, AsyncWrite, ReadBuf},
@@ -39,13 +39,13 @@ impl Socks4TcpClient {
             dst: addr.into(),
             user_id: user_id.into(),
         };
-        trace!("client connected, going to send handshake: {:?}", hs);
+        debug!("client connected, going to send handshake: {:?}", hs);
 
         hs.write_to(&mut s).await?;
 
         let hsp = HandshakeResponse::read_from(&mut s).await?;
 
-        trace!("got handshake response: {:?}", hsp);
+        debug!("got handshake response: {:?}", hsp);
 
         if hsp.cd != ResultCode::RequestGranted {
             return Err(Error::Result(hsp.cd));

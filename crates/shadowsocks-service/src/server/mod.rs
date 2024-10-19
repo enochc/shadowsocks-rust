@@ -3,7 +3,7 @@
 use std::{io, sync::Arc, time::Duration};
 
 use futures::future;
-use log::trace;
+use log::debug;
 use shadowsocks::net::{AcceptOpts, ConnectOpts};
 
 use crate::{
@@ -34,7 +34,7 @@ pub async fn run(config: Config) -> io::Result<()> {
     assert_eq!(config.config_type, ConfigType::Server);
     assert!(!config.server.is_empty());
 
-    trace!("{:?}", config);
+    debug!("{:?}", config);
 
     // Warning for Stream Ciphers
     #[cfg(feature = "stream-cipher")]

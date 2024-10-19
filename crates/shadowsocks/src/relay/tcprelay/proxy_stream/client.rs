@@ -9,7 +9,7 @@ use std::{
 use bytes::{BufMut, BytesMut};
 use cfg_if::cfg_if;
 use futures::ready;
-use log::trace;
+use log::{trace, debug};
 use once_cell::sync::Lazy;
 use pin_project::pin_project;
 use tokio::{
@@ -135,7 +135,7 @@ where
             None => OutboundTcpStream::connect_server_with_opts(&context, svr_cfg.tcp_external_addr(), opts).await?,
         };
 
-        trace!(
+        debug!(
             "connected tcp remote {} (outbound: {}) with {:?}",
             svr_cfg.addr(),
             svr_cfg.tcp_external_addr(),

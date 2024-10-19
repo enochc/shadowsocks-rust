@@ -60,7 +60,7 @@ impl PacketFilter {
     }
 
     fn tcp_natlook(&self, bind_addr: &SocketAddr, peer_addr: &SocketAddr, proto: Protocol) -> io::Result<SocketAddr> {
-        trace!("PF natlook peer: {}, bind: {}", peer_addr, bind_addr);
+        debug!("PF natlook peer: {}, bind: {}", peer_addr, bind_addr);
 
         unsafe {
             let mut pnl: pfioc_natlook = mem::zeroed();

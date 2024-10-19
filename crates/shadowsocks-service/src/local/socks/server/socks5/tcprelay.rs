@@ -63,24 +63,24 @@ impl Socks5TcpHandler {
             match *method {
                 socks5::SOCKS5_AUTH_METHOD_PASSWORD => {
                     let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_PASSWORD);
-                    trace!("reply handshake {:?}", resp);
+                    debug!("reply handshake {:?}", resp);
                     resp.write_to(stream).await?;
 
                     return self.check_auth_password(stream).await;
                 }
                 socks5::SOCKS5_AUTH_METHOD_NONE => {
                     if !allow_none {
-                        trace!("none authentication method is not allowed");
+                        debug!("none authentication method is not allowed");
                     } else {
                         let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_NONE);
-                        trace!("reply handshake {:?}", resp);
+                        debug!("reply handshake {:?}", resp);
                         resp.write_to(stream).await?;
 
                         return Ok(());
                     }
                 }
                 _ => {
-                    trace!("unsupported authentication method {}", method);
+                    debug!("unsupported authentication method {}", method);
                 }
             }
         }
@@ -88,7 +88,7 @@ impl Socks5TcpHandler {
         let resp = HandshakeResponse::new(socks5::SOCKS5_AUTH_METHOD_NOT_ACCEPTABLE);
         resp.write_to(stream).await?;
 
-        trace!("reply handshake {:?}", resp);
+        debug!("reply handshake {:?}", resp);
 
         Err(Error::new(
             ErrorKind::Other,
@@ -143,7 +143,7 @@ impl Socks5TcpHandler {
         };
 
         if self.auth.passwd.check_user(user_name, password) {
-            trace!(
+            debug!(
                 "socks5 authenticated with Username/Password method, user: {}, password: {}",
                 user_name,
                 password
@@ -175,7 +175,7 @@ impl Socks5TcpHandler {
         let handshake_req = match HandshakeRequest::read_from(&mut stream).await {
             Ok(r) => r,
             Err(Socks5Error::IoError(ref err)) if err.kind() == ErrorKind::UnexpectedEof => {
-                trace!("socks5 handshake early eof. peer: {}", peer_addr);
+                debug!("socks5 handshake early eof. peer: {}", peer_addr);
                 return Ok(());
             }
             Err(err) => {
@@ -184,7 +184,7 @@ impl Socks5TcpHandler {
             }
         };
 
-        trace!("socks5 {:?}", handshake_req);
+        debug!("socks5 {:?}", handshake_req);
         self.check_auth(&mut stream, &handshake_req).await?;
 
         // 2. Fetch headers
@@ -198,7 +198,7 @@ impl Socks5TcpHandler {
             }
         };
 
-        trace!("socks5 {:?} peer: {}", header, peer_addr);
+        debug!("socks5 {:?} peer: {}", header, peer_addr);
 
         let addr = header.address;
 
@@ -264,7 +264,7 @@ impl Socks5TcpHandler {
                     TcpResponseHeader::new(socks5::Reply::Succeeded, Address::SocketAddress(remote.local_addr()?));
                 header.write_to(&mut stream).await?;
 
-                trace!("sent header: {:?}", header);
+                debug!("sent header: {:?}", header);
 
                 remote
             }

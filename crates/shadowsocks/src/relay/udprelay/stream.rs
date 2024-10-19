@@ -54,7 +54,7 @@ pub fn encrypt_payload_stream(
 
     if iv_len > 0 {
         context.generate_nonce(method, iv, false);
-        trace!("UDP packet generated stream iv {:?}", ByteStr::new(iv));
+        debug!("UDP packet generated stream iv {:?}", ByteStr::new(iv));
     }
 
     let mut cipher = Cipher::new(method, key, iv);
@@ -82,7 +82,7 @@ pub fn decrypt_payload_stream(
     let (iv, data) = payload.split_at_mut(iv_len);
     // context.check_nonce_replay(iv)?;
 
-    trace!("UDP packet got stream IV {:?}", ByteStr::new(iv));
+    debug!("UDP packet got stream IV {:?}", ByteStr::new(iv));
     let mut cipher = Cipher::new(method, key, iv);
 
     assert!(cipher.decrypt_packet(data));

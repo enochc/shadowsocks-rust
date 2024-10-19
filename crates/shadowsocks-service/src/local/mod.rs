@@ -7,7 +7,7 @@ use std::{
 };
 
 use futures::future;
-use log::trace;
+use log::debug;
 use shadowsocks::{
     config::Mode,
     net::{AcceptOpts, ConnectOpts},
@@ -96,7 +96,7 @@ impl Server {
     pub async fn new(config: Config) -> io::Result<Server> {
         assert!(config.config_type == ConfigType::Local && !config.local.is_empty());
 
-        trace!("{:?}", config);
+        debug!("{:?}", config);
 
         // Warning for Stream Ciphers
         // NOTE: This will only check servers in config.
@@ -456,7 +456,7 @@ impl Server {
 
                         loop {
                             let (mut stream, peer_addr) = listener.accept().await?;
-                            trace!("accepted {:?} for receiving tun file descriptor", peer_addr);
+                            debug!("accepted {:?} for receiving tun file descriptor", peer_addr);
 
                             let mut buffer = [0u8; 1024];
                             let mut fd_buffer = [0];

@@ -298,7 +298,7 @@ where
                     let (target_addr, data) = match packet_received_opt {
                         Some(d) => d,
                         None => {
-                            trace!("udp association for {} -> ... channel closed", self.peer_addr);
+                            debug!("udp association for {} -> ... channel closed", self.peer_addr);
                             break;
                         }
                     };
@@ -359,7 +359,7 @@ where
                             .server_session_map
                             .entry(control.server_session_id)
                             .or_insert_with(|| {
-                                trace!(
+                                debug!(
                                     "udp server with session {} for {} created",
                                     control.client_session_id,
                                     self.peer_addr,
@@ -428,7 +428,7 @@ where
         // Check if target should be bypassed. If so, send packets directly.
         let bypassed = self.balancer.is_empty() || self.context.check_target_bypassed(target_addr).await;
 
-        trace!(
+        debug!(
             "udp relay {} -> {} ({}) with {} bytes",
             self.peer_addr,
             target_addr,
@@ -602,7 +602,7 @@ where
     }
 
     async fn send_received_respond_packet(&mut self, addr: &Address, data: &[u8], bypassed: bool) {
-        trace!(
+        debug!(
             "udp relay {} <- {} ({}) received {} bytes",
             self.peer_addr,
             addr,
@@ -624,7 +624,7 @@ where
                 err
             );
         } else {
-            trace!(
+            debug!(
                 "udp relay {} <- {} ({}) with {} bytes",
                 self.peer_addr,
                 addr,

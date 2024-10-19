@@ -177,7 +177,7 @@ impl TcpServerClient {
 
                 let res = ignore_until_end(&mut stream).await;
 
-                trace!(
+                debug!(
                     "tcp silent-drop peer: {} is now closing with result {:?}",
                     self.peer_addr,
                     res
@@ -187,7 +187,7 @@ impl TcpServerClient {
             }
         };
 
-        trace!(
+        debug!(
             "accepted tcp client connection {}, establishing tunnel to {}",
             self.peer_addr,
             target_addr
@@ -242,7 +242,7 @@ impl TcpServerClient {
                     // Timeout. Send handshake to server.
                     timeout_fut(self.timeout, remote_stream.write(&[])).await?;
 
-                    trace!(
+                    debug!(
                         "tcp tunnel {} -> {} sent TFO connect without data",
                         self.peer_addr,
                         target_addr
@@ -260,7 +260,7 @@ impl TcpServerClient {
 
         match copy_encrypted_bidirectional(self.method, &mut self.stream, &mut remote_stream).await {
             Ok((rn, wn)) => {
-                trace!(
+                debug!(
                     "tcp tunnel {} <-> {} closed, L2R {} bytes, R2L {} bytes",
                     self.peer_addr,
                     target_addr,
@@ -269,7 +269,7 @@ impl TcpServerClient {
                 );
             }
             Err(err) => {
-                trace!(
+                debug!(
                     "tcp tunnel {} <-> {} closed with error: {}",
                     self.peer_addr,
                     target_addr,

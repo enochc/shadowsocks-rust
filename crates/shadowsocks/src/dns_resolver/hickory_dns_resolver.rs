@@ -22,7 +22,7 @@ use hickory_resolver::{
     },
     AsyncResolver, TokioHandle,
 };
-use log::trace;
+use log::{trace, debug};
 use tokio::{io::ReadBuf, net::UdpSocket};
 
 use crate::net::{tcp::TcpStream as ShadowTcpStream, udp::UdpSocket as ShadowUdpSocket, ConnectOpts};
@@ -124,7 +124,7 @@ pub async fn create_resolver(
             // Enable EDNS0 for large records
             resolver_opts.edns0 = true;
 
-            trace!(
+            debug!(
                 "initializing DNS resolver with config {:?} opts {:?}",
                 conf,
                 resolver_opts
@@ -165,7 +165,7 @@ pub async fn create_resolver(
                     // Enable EDNS0 for large records
                     opts.edns0 = true;
 
-                    trace!(
+                    debug!(
                         "initializing DNS resolver with system-config {:?} opts {:?}",
                         config,
                         opts

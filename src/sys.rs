@@ -22,7 +22,7 @@ pub fn adjust_nofile() {
         }
 
         if lim.rlim_cur != lim.rlim_max {
-            trace!("rlimit NOFILE {:?} require adjustion", lim);
+            debug!("rlimit NOFILE {:?} require adjustion", lim);
             lim.rlim_cur = lim.rlim_max;
 
             // On older macOS, setrlimit with rlim_cur = infinity will fail.

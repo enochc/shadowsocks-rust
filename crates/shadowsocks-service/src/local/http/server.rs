@@ -5,7 +5,7 @@
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
 use hyper::{body, server::conn::http1, service};
-use log::{error, info, trace};
+use log::{error, info, trace, debug};
 use shadowsocks::{config::ServerAddr, net::TcpListener};
 use tokio::{
     io::{AsyncRead, AsyncWrite},
@@ -118,7 +118,7 @@ impl Http {
                 }
             };
 
-            trace!("HTTP accepted client from {}", peer_addr);
+            debug!("HTTP accepted client from {}", peer_addr);
             let handler = handler.clone();
             tokio::spawn(async move {
                 if let Err(err) = handler.serve_connection(stream, peer_addr).await {

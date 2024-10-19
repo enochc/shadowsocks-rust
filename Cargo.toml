@@ -65,6 +65,7 @@ default = [
     "service",
     "local-http",
     "local-tunnel",
+    "local-tun",
     "local-socks4",
     "multi-threaded",
     "aead-cipher-2022",

@@ -72,7 +72,7 @@ macro_rules! lookup_then {
 macro_rules! lookup_then_connect {
     ($context:expr, $addr:expr, $port:expr, |$resolved_addr:ident| $body:block) => {{
         use futures::future::{self, Either};
-        use log::trace;
+        use log::{trace, debug};
         use std::{net::SocketAddr, time::Duration};
         use tokio::time;
 
@@ -118,7 +118,7 @@ macro_rules! lookup_then_connect {
             //                 time::sleep(delay).await;
             //             }
             //
-            //             trace!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
+            //             debug!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
             //
             //             match $body {
             //                 Ok(r) => Ok(($resolved_addr, r)),
@@ -139,11 +139,11 @@ macro_rules! lookup_then_connect {
             let mut result = None;
 
             for $resolved_addr in v4_addrs {
-                trace!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
+                debug!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
 
                 match $body {
                     Ok(r) => {
-                        trace!("connected {}:{} {}", $addr, $port, $resolved_addr);
+                        debug!("connected {}:{} {}", $addr, $port, $resolved_addr);
                         result = Some(Ok(($resolved_addr, r)));
                         break;
                     }
@@ -160,11 +160,11 @@ macro_rules! lookup_then_connect {
             let mut result = None;
 
             for $resolved_addr in v6_addrs {
-                trace!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
+                debug!("trying connect {}:{} {}", $addr, $port, $resolved_addr);
 
                 match $body {
                     Ok(r) => {
-                        trace!("connected {}:{} {}", $addr, $port, $resolved_addr);
+                        debug!("connected {}:{} {}", $addr, $port, $resolved_addr);
                         result = Some(Ok(($resolved_addr, r)));
                         break;
                     }

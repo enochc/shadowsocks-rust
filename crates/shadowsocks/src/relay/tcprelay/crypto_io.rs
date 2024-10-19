@@ -11,7 +11,7 @@ use std::{
 use byte_string::ByteStr;
 use bytes::Bytes;
 use futures::ready;
-use log::trace;
+use log::{trace, debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
 
 use crate::{
@@ -366,13 +366,13 @@ impl<S> CryptoStream<S> {
             CipherCategory::Stream => {
                 let mut local_iv = vec![0u8; prev_len];
                 context.generate_nonce(method, &mut local_iv, true);
-                trace!("generated Stream cipher IV {:?}", ByteStr::new(&local_iv));
+                debug!("generated Stream cipher IV {:?}", ByteStr::new(&local_iv));
                 local_iv
             }
             CipherCategory::Aead => {
                 let mut local_salt = vec![0u8; prev_len];
                 context.generate_nonce(method, &mut local_salt, true);
-                trace!("generated AEAD cipher salt {:?}", ByteStr::new(&local_salt));
+                debug!("generated AEAD cipher salt {:?}", ByteStr::new(&local_salt));
                 local_salt
             }
             CipherCategory::None => Vec::new(),
@@ -382,7 +382,7 @@ impl<S> CryptoStream<S> {
 
                 let mut local_salt = vec![0u8; prev_len];
                 context.generate_nonce(method, &mut local_salt, false);
-                trace!("generated AEAD cipher salt {:?}", ByteStr::new(&local_salt));
+                debug!("generated AEAD cipher salt {:?}", ByteStr::new(&local_salt));
                 local_salt
             }
         };

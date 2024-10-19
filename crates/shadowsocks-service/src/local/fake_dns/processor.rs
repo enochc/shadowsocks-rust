@@ -59,7 +59,7 @@ pub async fn handle_dns_request(req_message: &Message, manager: &FakeDnsManager)
         }
     }
 
-    trace!("QUERY {:?} ANSWER {:?}", req_message, rsp_message);
+    debug!("QUERY {:?} ANSWER {:?}", req_message, rsp_message);
 
     Ok(rsp_message)
 }

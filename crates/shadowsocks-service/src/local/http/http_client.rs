@@ -18,7 +18,7 @@ use hyper::{
     rt::{Sleep, Timer},
     Request, Response,
 };
-use log::{error, trace};
+use log::{error, trace, debug};
 use lru_time_cache::LruCache;
 use pin_project::pin_project;
 use shadowsocks::relay::Address;
@@ -145,7 +145,7 @@ where
         //
         // FIXME: If the cached connection is closed unexpectly, this request will fail immediately.
         if let Some(c) = self.get_cached_connection(&host).await {
-            trace!("HTTP client for host: {} taken from cache", host);
+            debug!("HTTP client for host: {} taken from cache", host);
             match self.send_request_conn(host, c, req).await {
                 Ok(o) => return Ok(o),
                 Err(err) => return Err(err.into()),
@@ -197,13 +197,13 @@ where
         mut c: HttpConnection<B>,
         req: Request<B>,
     ) -> hyper::Result<Response<body::Incoming>> {
-        trace!("HTTP making request to host: {}, request: {:?}", host, req);
+        debug!("HTTP making request to host: {}, request: {:?}", host, req);
         let response = c.send_request(req).await?;
-        trace!("HTTP received response from host: {}, response: {:?}", host, response);
+        debug!("HTTP received response from host: {}, response: {:?}", host, response);
 
         // Check keep-alive
         if check_keep_alive(response.version(), response.headers(), false) {
-            trace!(
+            debug!(
                 "HTTP connection keep-alive for host: {}, response: {:?}",
                 host,
                 response
@@ -258,7 +258,7 @@ where
         host: Address,
         stream: AutoProxyClientStream,
     ) -> io::Result<HttpConnection<B>> {
-        trace!(
+        debug!(
             "HTTP making new HTTP/1.1 connection to host: {}, scheme: {}",
             host,
             scheme
@@ -292,7 +292,7 @@ where
         domain: &str,
         stream: AutoProxyClientStream,
     ) -> io::Result<HttpConnection<B>> {
-        trace!("HTTP making new TLS connection to host: {}, scheme: {}", host, scheme);
+        debug!("HTTP making new TLS connection to host: {}, scheme: {}", host, scheme);
 
         // TLS handshake, check alpn for h2 support.
         let stream = ProxyHttpStream::connect_https(stream, domain).await?;

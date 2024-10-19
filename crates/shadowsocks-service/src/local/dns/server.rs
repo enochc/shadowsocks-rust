@@ -341,7 +341,7 @@ impl DnsTcpServer {
             stream.write_all(&buf).await?;
         }
 
-        trace!("dns tcp connection {} closed", peer_addr);
+        debug!("dns tcp connection {} closed", peer_addr);
 
         Ok(())
     }
@@ -597,7 +597,7 @@ fn should_forward_by_query(context: &ServiceContext, balancer: &PingBalancer, qu
                 // cmp will handle FQDN in case insensitive way
                 if let Ordering::Equal = query.name().cmp(&name) {
                     // It seems that query is for this server, just bypass it to local resolver
-                    trace!("DNS querying name {} of server {:?}", query.name(), svr_cfg);
+                    debug!("DNS querying name {} of server {:?}", query.name(), svr_cfg);
                     return Some(false);
                 }
             }
@@ -750,7 +750,7 @@ impl DnsClient {
             let (r, forward) = self.acl_lookup(&request.queries()[0], local_addr, remote_addr).await;
             if let Ok(result) = r {
                 for rec in result.answers() {
-                    trace!("dns answer: {:?}", rec);
+                    debug!("dns answer: {:?}", rec);
                     match rec.data() {
                         Some(RData::A(ip)) => {
                             self.context
@@ -786,12 +786,12 @@ impl DnsClient {
         match should_forward_by_query(&self.context, &self.balancer, query) {
             Some(true) => {
                 let remote_response = self.lookup_remote(query, remote_addr).await;
-                trace!("pick remote response (query): {:?}", remote_response);
+                debug!("pick remote response (query): {:?}", remote_response);
                 return (remote_response, true);
             }
             Some(false) => {
                 let local_response = self.lookup_local(query, local_addr).await;
-                trace!("pick local response (query): {:?}", local_response);
+                debug!("pick local response (query): {:?}", local_response);
                 return (local_response, false);
             }
             None => (),
@@ -815,7 +815,7 @@ impl DnsClient {
             tokio::select! {
                 response = &mut remote_response_fut, if remote_response.is_none() => {
                     if use_remote {
-                        trace!("pick remote response (response): {:?}", response);
+                        debug!("pick remote response (response): {:?}", response);
                         return (response, true);
                     } else {
                         remote_response = Some(response);
@@ -823,10 +823,10 @@ impl DnsClient {
                 }
                 decision = &mut decider, if !use_remote => {
                     if let Some(local_response) = decision {
-                        trace!("pick local response (response): {:?}", local_response);
+                        debug!("pick local response (response): {:?}", local_response);
                         return (local_response, false);
                     } else if let Some(remote_response) = remote_response {
-                        trace!("pick remote response (response): {:?}", remote_response);
+                        debug!("pick remote response (response): {:?}", remote_response);
                         return (remote_response, true);
                     } else {
                         use_remote = true;

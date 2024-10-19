@@ -1,6 +1,6 @@
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
-use log::{error, info};
+use log::{error, info, debug};
 use shadowsocks::{config::Mode, net::TcpListener as ShadowTcpListener, ServerAddr};
 use tokio::{net::TcpStream, time};
 
@@ -101,6 +101,7 @@ impl SocksTcpServer {
     /// Start TCP accept loop
     pub async fn run(self) -> io::Result<()> {
         info!("shadowsocks socks TCP listening on {}", self.listener.local_addr()?);
+        debug!("sup");
 
         // If UDP is enabled, SOCK5 UDP_ASSOCIATE command will let client to send requests to this address
         let udp_associate_addr = Arc::new(self.udp_associate_addr);

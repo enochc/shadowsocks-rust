@@ -2,7 +2,7 @@
 
 #[cfg(feature = "hickory-dns")]
 use hickory_resolver::config::ResolverOpts;
-use log::trace;
+use log::{trace, debug};
 use shadowsocks::{dns_resolver::DnsResolver, net::ConnectOpts};
 
 use crate::config::DnsConfig;
@@ -50,7 +50,7 @@ pub async fn build_dns_resolver(
                 }
             }
 
-            trace!("initialized DNS system resolver builtin");
+            debug!("initialized DNS system resolver builtin");
 
             None
         }
@@ -81,7 +81,7 @@ pub async fn build_dns_resolver(
             use crate::local::dns::dns_resolver::DnsResolver as LocalDnsResolver;
             use shadowsocks::config::Mode;
 
-            trace!("initializing direct DNS resolver for {}", ns);
+            debug!("initializing direct DNS resolver for {}", ns);
 
             let mut resolver = LocalDnsResolver::new(ns);
             resolver.set_mode(Mode::TcpAndUdp);

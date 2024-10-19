@@ -79,6 +79,7 @@ impl TunBuilder {
     }
 
     pub fn destination(&mut self, addr: IpNet) {
+        info!("something here!");
         self.tun_config.destination(addr.addr());
     }
 
@@ -184,7 +185,7 @@ impl Tun {
             }
         };
 
-        trace!(
+        debug!(
             "[TUN] tun device network: {} (address: {}, netmask: {})",
             address_net,
             address,
@@ -203,7 +204,7 @@ impl Tun {
                     let n = n?;
 
                     let packet = &mut packet_buffer[..n];
-                    trace!("[TUN] received IP packet {:?}", ByteStr::new(packet));
+                    debug!("[TUN] received IP packet {:?}", ByteStr::new(packet));
 
                     if let Err(err) = self.handle_tun_frame(&address_broadcast, packet).await {
                         error!("[TUN] handle IP frame failed, error: {}", err);
@@ -217,7 +218,7 @@ impl Tun {
                             if n < packet.len() {
                                 warn!("[TUN] sent IP packet (UDP), but truncated. sent {} < {}, {:?}", n, packet.len(), ByteStr::new(&packet));
                             } else {
-                                trace!("[TUN] sent IP packet (UDP) {:?}", ByteStr::new(&packet));
+                                debug!("[TUN] sent IP packet (UDP) {:?}", ByteStr::new(&packet));
                             }
                         }
                         Err(err) => {
@@ -244,7 +245,7 @@ impl Tun {
                             if n < packet.len() {
                                 warn!("[TUN] sent IP packet (TCP), but truncated. sent {} < {}, {:?}", n, packet.len(), ByteStr::new(&packet));
                             } else {
-                                trace!("[TUN] sent IP packet (TCP) {:?}", ByteStr::new(&packet));
+                                debug!("[TUN] sent IP packet (TCP) {:?}", ByteStr::new(&packet));
                             }
                         }
                         Err(err) => {
@@ -265,7 +266,7 @@ impl Tun {
             }
         };
 
-        trace!("[TUN] {:?}", packet);
+        debug!("[TUN] {:?}", packet);
 
         let src_ip_addr = packet.src_addr();
         let dst_ip_addr = packet.dst_addr();
@@ -281,7 +282,7 @@ impl Tun {
             };
 
         if src_non_unicast || dst_non_unicast {
-            trace!(
+            debug!(
                 "[TUN] IP packet {} (unicast? {}) -> {} (unicast? {}) throwing away",
                 src_ip_addr,
                 !src_non_unicast,
@@ -294,7 +295,7 @@ impl Tun {
         match packet.protocol() {
             IpProtocol::Tcp => {
                 if !self.mode.enable_tcp() {
-                    trace!("received TCP packet but mode is {}, throwing away", self.mode);
+                    debug!("received TCP packet but mode is {}, throwing away", self.mode);
                     return Ok(());
                 }
 
@@ -318,7 +319,7 @@ impl Tun {
                 let src_addr = SocketAddr::new(packet.src_addr(), src_port);
                 let dst_addr = SocketAddr::new(packet.dst_addr(), dst_port);
 
-                trace!(
+                debug!(
                     "[TUN] TCP packet {} (unicast? {}) -> {} (unicast? {}) {}",
                     src_addr,
                     !src_non_unicast,
@@ -339,7 +340,7 @@ impl Tun {
             }
             IpProtocol::Udp => {
                 if !self.mode.enable_udp() {
-                    trace!("received UDP packet but mode is {}, throwing away", self.mode);
+                    debug!("received UDP packet but mode is {}, throwing away", self.mode);
                     return Ok(());
                 }
 
@@ -364,7 +365,7 @@ impl Tun {
                 let dst_addr = SocketAddr::new(packet.dst_addr(), dst_port);
 
                 let payload = udp_packet.payload();
-                trace!(
+                debug!(
                     "[TUN] UDP packet {} (unicast? {}) -> {} (unicast? {}) {}",
                     src_addr,
                     !src_non_unicast,

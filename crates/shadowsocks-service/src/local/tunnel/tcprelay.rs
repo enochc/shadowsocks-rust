@@ -2,7 +2,7 @@
 
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
-use log::{error, info, trace};
+use log::{error, info, debug};
 use shadowsocks::{net::TcpListener as ShadowTcpListener, relay::socks5::Address, ServerAddr};
 use tokio::{net::TcpStream, time};
 
@@ -122,7 +122,7 @@ async fn handle_tcp_client(
     let forward_addr: &Address = &forward_addr;
 
     if balancer.is_empty() {
-        trace!("establishing tcp tunnel {} <-> {} direct", peer_addr, forward_addr);
+        debug!("establishing tcp tunnel {} <-> {} direct", peer_addr, forward_addr);
 
         let mut remote = AutoProxyClientStream::connect_bypassed(context, forward_addr).await?;
         return establish_tcp_tunnel_bypassed(&mut stream, &mut remote, peer_addr, forward_addr).await;
@@ -130,7 +130,7 @@ async fn handle_tcp_client(
 
     let server = balancer.best_tcp_server();
     let svr_cfg = server.server_config();
-    trace!(
+    debug!(
         "establishing tcp tunnel {} <-> {} through sever {} (outbound: {})",
         peer_addr,
         forward_addr,

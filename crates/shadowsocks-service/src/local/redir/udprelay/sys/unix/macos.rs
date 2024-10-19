@@ -55,7 +55,7 @@ impl UdpRedirSocket {
         if reuse_port {
             if let Err(err) = socket.set_reuse_port(true) {
                 if let Some(libc::ENOPROTOOPT) = err.raw_os_error() {
-                    trace!("failed to set SO_REUSEPORT, error: {}", err);
+                    debug!("failed to set SO_REUSEPORT, error: {}", err);
                 } else {
                     error!("failed to set SO_REUSEPORT, error: {}", err);
                     return Err(err);

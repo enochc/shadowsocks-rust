@@ -185,7 +185,7 @@ impl UdpInboundWrite for UdpRedirInboundWriter {
                     );
                 }
 
-                trace!(
+                debug!(
                     "udp redir send back data {} bytes, remote: {}, peer: {}, socket_opts: {:?}",
                     n,
                     remote_addr,
@@ -282,7 +282,7 @@ impl RedirUdpServer {
                     // Copy bytes, because udp_associate runs in another tokio Task
                     let pkt = &pkt_buf[..recv_len];
 
-                    trace!(
+                    debug!(
                         "received UDP packet from {}, destination {}, length {} bytes",
                         src,
                         dst,
