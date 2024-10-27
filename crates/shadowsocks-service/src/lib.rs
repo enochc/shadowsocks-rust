@@ -58,7 +58,6 @@ pub use self::manager::run as run_manager;
 #[cfg(feature = "server")]
 pub use self::server::run as run_server;
 pub use shadowsocks;
-
 pub mod acl;
 pub mod config;
 mod dns;
@@ -75,6 +74,15 @@ mod utils;
 /// Default UDP association's expire duration
 #[allow(dead_code)]
 const DEFAULT_UDP_EXPIRY_DURATION: Duration = Duration::from_secs(5 * 60);
+
+#[macro_export]
+macro_rules! me_debug {
+    ( $( $x:expr ),* ) => {
+        {
+            log::warn!($( $x, )*);
+        }
+    };
+}
 
 #[cfg(feature = "hickory-dns")]
 fn hint_support_default_system_resolver() -> bool {

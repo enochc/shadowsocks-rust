@@ -64,7 +64,7 @@ use hickory_resolver::config::{NameServerConfig, Protocol, ResolverConfig};
 use ipnet::IpNet;
 #[cfg(feature = "local-fake-dns")]
 use ipnet::{Ipv4Net, Ipv6Net};
-use log::warn;
+use log::{debug, warn};
 use serde::{Deserialize, Serialize};
 #[cfg(any(feature = "local-tunnel", feature = "local-dns"))]
 use shadowsocks::relay::socks5::Address;
@@ -2009,6 +2009,7 @@ impl Config {
 
         // Ext servers
         if let Some(servers) = config.servers {
+            debug!("<<<<< Im here!!");
             for svr in servers {
                 // Skip if server is disabled
                 if svr.disabled.unwrap_or(false) {

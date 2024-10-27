@@ -1,6 +1,6 @@
 use std::{io, net::SocketAddr, sync::Arc, time::Duration};
 
-use log::{error, info, debug};
+use log::{error, info};
 use shadowsocks::{config::Mode, net::TcpListener as ShadowTcpListener, ServerAddr};
 use tokio::{net::TcpStream, time};
 
@@ -10,7 +10,7 @@ use crate::local::{
     context::ServiceContext, loadbalancing::PingBalancer, net::tcp::listener::create_standard_tcp_listener,
     socks::config::Socks5AuthConfig,
 };
-
+use crate::me_debug;
 #[cfg(feature = "local-socks4")]
 use super::socks4::Socks4TcpHandler;
 use super::socks5::{Socks5TcpHandler, Socks5UdpServer};
@@ -101,7 +101,6 @@ impl SocksTcpServer {
     /// Start TCP accept loop
     pub async fn run(self) -> io::Result<()> {
         info!("shadowsocks socks TCP listening on {}", self.listener.local_addr()?);
-        debug!("sup");
 
         // If UDP is enabled, SOCK5 UDP_ASSOCIATE command will let client to send requests to this address
         let udp_associate_addr = Arc::new(self.udp_associate_addr);

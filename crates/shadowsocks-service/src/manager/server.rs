@@ -4,7 +4,7 @@
 use std::path::PathBuf;
 use std::{collections::HashMap, io, net::SocketAddr, sync::Arc, time::Duration};
 
-use log::{error, info, debug};
+use log::{error, info, debug, warn};
 use shadowsocks::{
     config::{Mode, ServerConfig, ServerType, ServerUser, ServerUserManager},
     context::{Context, SharedContext},
@@ -22,13 +22,8 @@ use shadowsocks::{
     ManagerListener, ServerAddr,
 };
 use tokio::{sync::Mutex, task::JoinHandle};
-
-use crate::{
-    acl::AccessControl,
-    config::{ManagerConfig, ManagerServerHost, ManagerServerMode, SecurityConfig},
-    net::FlowStat,
-    server::ServerBuilder,
-};
+use shadowsocks::manager::protocol::{AURequest, AUResponse};
+use crate::{acl::AccessControl, config::{ManagerConfig, ManagerServerHost, ManagerServerMode, SecurityConfig}, me_debug, net::FlowStat, server::ServerBuilder};
 
 enum ServerInstanceMode {
     Builtin {
@@ -146,6 +141,7 @@ impl ManagerBuilder {
 
     /// Build the manager server instance
     pub async fn build(self) -> io::Result<Manager> {
+        debug!("<< building manager: {}", &self.svr_cfg.addr);
         let listener = ManagerListener::bind(&self.context, &self.svr_cfg.addr).await?;
         Ok(Manager {
             context: self.context,
@@ -195,8 +191,12 @@ impl Manager {
         info!("shadowsocks manager server listening on {}", local_addr);
 
         loop {
+            me_debug!("<< inloop!! >>");
             let (req, peer_addr) = match self.listener.recv_from().await {
-                Ok(r) => r,
+                Ok(r) => {
+                    debug!("<< received a thing: {:?}", r);
+                    r
+                },
                 Err(err) => {
                     error!("manager recv_from error: {}", err);
                     continue;
@@ -204,6 +204,7 @@ impl Manager {
             };
 
             debug!("received {:?} from {:?}", req, peer_addr);
+
 
             match req {
                 ManagerRequest::Add(ref req) => match self.handle_add(req).await {
@@ -227,6 +228,14 @@ impl Manager {
                 ManagerRequest::Ping(..) => {
                     let rsp = self.handle_ping().await;
                     let _ = self.listener.send_to(&rsp, &peer_addr).await;
+                }
+                ManagerRequest::AddUser(ref req) => match self.handle_add_user(req).await {
+                    Ok(a) => {
+                        debug!("<< added user: {:?}", a);
+                    }
+                    Err(e) => {
+                        warn!("added user failed: {}", e);
+                    }
                 }
                 ManagerRequest::Stat(ref stat) => self.handle_stat(stat).await,
             }
@@ -455,6 +464,10 @@ impl Manager {
                 svr_cfg,
             },
         );
+    }
+
+    async fn handle_add_user(&self, req: &AURequest) -> io::Result<AUResponse> {
+        Ok(AUResponse("sup".into()))
     }
 
     async fn handle_add(&self, req: &AddRequest) -> io::Result<AddResponse> {

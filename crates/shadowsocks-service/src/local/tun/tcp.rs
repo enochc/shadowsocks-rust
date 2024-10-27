@@ -14,7 +14,7 @@ use std::{
     time::Duration,
 };
 
-use log::{debug, error};
+use log::{debug, error, trace};
 use shadowsocks::{net::TcpSocketOpts, relay::socks5::Address};
 use smoltcp::{
     iface::{Config as InterfaceConfig, Interface, SocketHandle, SocketSet},
@@ -30,15 +30,12 @@ use tokio::{
     sync::{mpsc, oneshot},
 };
 
-use crate::{
-    local::{
-        context::ServiceContext,
-        loadbalancing::PingBalancer,
-        net::AutoProxyClientStream,
-        utils::{establish_tcp_tunnel, establish_tcp_tunnel_bypassed},
-    },
-    net::utils::to_ipv4_mapped,
-};
+use crate::{local::{
+    context::ServiceContext,
+    loadbalancing::PingBalancer,
+    net::AutoProxyClientStream,
+    utils::{establish_tcp_tunnel, establish_tcp_tunnel_bypassed},
+}, me_debug, net::utils::to_ipv4_mapped};
 
 use super::virt_device::VirtTunDevice;
 
@@ -258,6 +255,7 @@ impl Drop for TcpTun {
 
 impl TcpTun {
     pub fn new(context: Arc<ServiceContext>, balancer: PingBalancer, mtu: u32) -> TcpTun {
+        debug!("<<< TcpTun");
         let mut capabilities = DeviceCapabilities::default();
         capabilities.medium = Medium::Ip;
         capabilities.max_transmission_unit = mtu as usize;
@@ -520,7 +518,8 @@ impl TcpTun {
                 return Err(io::Error::new(ErrorKind::Other, format!("listen error: {:?}", err)));
             }
 
-            debug!("created TCP connection for {} <-> {}", src_addr, dst_addr);
+            // been here
+            trace!("created TCP connection for {} <-> {}", src_addr, dst_addr);
 
             let connection = TcpConnection::new(
                 socket,
@@ -535,6 +534,7 @@ impl TcpTun {
             tokio::spawn(async move {
                 let connection = connection.await;
                 if let Err(err) = handle_redir_client(context, balancer, connection, src_addr, dst_addr).await {
+                    //, ERROR TCP tunnel failure, 10.0.0.1:51220 <-> 64.23.159.138:8082, error: Connection refused (os error 61)
                     error!("TCP tunnel failure, {} <-> {}, error: {}", src_addr, dst_addr, err);
                 }
             });
@@ -578,7 +578,6 @@ async fn establish_client_tcp_redir<'a>(
 
     let server = balancer.best_tcp_server();
     let svr_cfg = server.server_config();
-
     let mut remote =
         AutoProxyClientStream::connect_with_opts(context, &server, addr, server.connect_opts_ref()).await?;
     establish_tcp_tunnel(svr_cfg, &mut stream, &mut remote, peer_addr, addr).await

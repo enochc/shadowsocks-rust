@@ -93,6 +93,8 @@ pub async fn run(config: Config) -> io::Result<()> {
     for svr_inst in config.server {
         manager.add_server(svr_inst.config).await;
     }
-
-    manager.run().await
+    debug!("<< Run Manager...");
+    let rr = manager.run().await;
+    debug!("<< DONE! {:?}", rr);
+    rr
 }

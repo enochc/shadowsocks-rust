@@ -251,8 +251,8 @@ impl TcpServerClient {
             }
         }
 
-        debug!(
-            "established tcp tunnel {} <-> {} with {:?}",
+        info!(
+            "<<1 established tcp tunnel {} <-> {} with {:?}",
             self.peer_addr,
             target_addr,
             self.context.connect_opts_ref()

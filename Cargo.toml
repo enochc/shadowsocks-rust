@@ -66,6 +66,7 @@ default = [
     "local-http",
     "local-tunnel",
     "local-tun",
+    "utility-url-outline",
     "local-socks4",
     "multi-threaded",
     "aead-cipher-2022",
@@ -252,6 +253,7 @@ rpmalloc = { version = "0.2", optional = true }
 shadowsocks-service = { version = "1.21.0", path = "./crates/shadowsocks-service" }
 
 windows-service = { version = "0.7", optional = true }
+chrono = "0.4.38"
 
 [target.'cfg(unix)'.dependencies]
 daemonize = "0.5"

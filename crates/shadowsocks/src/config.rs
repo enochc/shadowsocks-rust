@@ -16,7 +16,7 @@ use base64::Engine as _;
 use byte_string::ByteStr;
 use bytes::Bytes;
 use cfg_if::cfg_if;
-use log::error;
+use log::{debug, error};
 use thiserror::Error;
 use url::{self, Url};
 
@@ -271,6 +271,7 @@ impl ServerUserManager {
 
     /// Add a new user
     pub fn add_user(&mut self, user: ServerUser) {
+        debug!("<< add user: {:?}", user);
         self.users.insert(user.clone_identity_hash(), Arc::new(user));
     }
 
@@ -1060,6 +1061,7 @@ impl FromStr for ManagerAddr {
     type Err = ManagerAddrError;
 
     fn from_str(s: &str) -> Result<ManagerAddr, ManagerAddrError> {
+        debug!("<< from here!!!");
         match s.find(':') {
             Some(pos) => {
                 // Contains a ':' in address, must be IP:Port or Domain:Port
@@ -1071,7 +1073,10 @@ impl FromStr for ManagerAddr {
                         let (sdomain, sport) = (sdomain.trim(), sport[1..].trim());
 
                         match sport.parse::<u16>() {
-                            Ok(port) => Ok(ManagerAddr::DomainName(sdomain.to_owned(), port)),
+                            Ok(port) => {
+                                debug!("<< a port::{}", port);
+                                Ok(ManagerAddr::DomainName(sdomain.to_owned(), port))
+                            },
                             Err(..) => Err(ManagerAddrError),
                         }
                     }

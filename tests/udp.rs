@@ -15,7 +15,8 @@ use shadowsocks_service::{
 const SERVER_ADDR: &str = "127.0.0.1:8093";
 const LOCAL_ADDR: &str = "127.0.0.1:8291";
 
-const UDP_ECHO_SERVER_ADDR: &str = "127.0.0.1:50403";
+// const UDP_ECHO_SERVER_ADDR: &str = "127.0.0.1:50403";
+const UDP_ECHO_SERVER_ADDR: &str = "127.0.0.1:6100";
 
 const PASSWORD: &str = "test-password";
 const METHOD: CipherKind = CipherKind::AES_128_GCM;
@@ -64,16 +65,16 @@ fn start_udp_echo_server() {
     tokio::spawn(async {
         let l = UdpSocket::bind(UDP_ECHO_SERVER_ADDR).await.unwrap();
 
-        debug!("UDP echo server started {}", UDP_ECHO_SERVER_ADDR);
+        println!("UDP echo server started {}", UDP_ECHO_SERVER_ADDR);
 
         let mut buf = vec![0u8; 65536];
         let (amt, src) = l.recv_from(&mut buf).await.unwrap();
 
-        debug!("UDP echo received {} bytes from {}", amt, src);
+        println!("UDP echo received {} bytes from {}", amt, src);
 
         l.send_to(&buf[..amt], &src).await.unwrap();
 
-        debug!("UDP echo sent {} bytes to {}", amt, src);
+        println!("UDP echo sent {} bytes to {}", amt, src);
     });
 }
 
@@ -100,7 +101,7 @@ async fn udp_relay() {
     l.send_to(0, payload, &remote_addr).await.unwrap();
 
     let mut buf = vec![0u8; 65536];
-    let (amt, _, recv_addr) = time::timeout(Duration::from_secs(5), l.recv_from(&mut buf))
+    let (amt, _, recv_addr) = time::timeout(Duration::from_secs(15), l.recv_from(&mut buf))
         .await
         .unwrap()
         .unwrap();

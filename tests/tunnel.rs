@@ -8,7 +8,7 @@ use tokio::{
     net::{TcpStream, UdpSocket},
     time::{self, Duration},
 };
-
+use tracing::warn;
 use shadowsocks_service::{
     config::{Config, ConfigType},
     run_local, run_server,
@@ -76,6 +76,8 @@ async fn tcp_tunnel() {
 
     let mut buf = Vec::new();
     r.read_until(b'\n', &mut buf).await.unwrap();
+    // warn!("<< {:?} >>", ByteStr::new(buf.as_slice()));
+    println!("{}", String::from_utf8_lossy(&buf));
 
     let http_status = b"HTTP/1.0 200 OK\r\n";
     assert!(buf.starts_with(http_status));
