@@ -26,7 +26,7 @@ pub struct ServerUserConfig {
 
 /// Server's configuration
 #[derive(Serialize, Deserialize, Debug, Clone)]
-pub struct ServerConfig {
+pub struct ServerConfigOther {
     pub server_port: u16,
     pub password: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -48,7 +48,7 @@ pub struct ServerConfig {
 /// `add User` request
 #[derive(Debug, Clone)]
 pub struct AURequest {
-    pub config: ServerConfig
+    pub config: ServerConfigOther
 }
 // pub type AURequest = ServerConfig;
 
@@ -98,7 +98,7 @@ impl ManagerProtocol for AUResponse {
 }
 
 /// `add` request
-pub type AddRequest = ServerConfig;
+pub type AddRequest = ServerConfigOther;
 
 impl ManagerProtocol for AddRequest {
     fn from_bytes(buf: &[u8]) -> Result<Self, Error> {
@@ -215,7 +215,7 @@ impl ManagerProtocol for ListRequest {
 #[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(transparent)]
 pub struct ListResponse {
-    pub servers: Vec<ServerConfig>,
+    pub servers: Vec<ServerConfigOther>,
 }
 
 impl ManagerProtocol for ListResponse {

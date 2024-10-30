@@ -3,7 +3,6 @@
 #[cfg(unix)]
 use std::path::PathBuf;
 use std::{collections::HashMap, io, net::SocketAddr, sync::Arc, time::Duration};
-
 use log::{error, info, debug, warn};
 use shadowsocks::{
     config::{Mode, ServerConfig, ServerType, ServerUser, ServerUserManager},
@@ -21,8 +20,8 @@ use shadowsocks::{
     plugin::PluginConfig,
     ManagerListener, ServerAddr,
 };
-use tokio::{sync::Mutex, task::JoinHandle};
-use shadowsocks::manager::protocol::{AURequest, AUResponse};
+use tokio::{sync::Mutex, task::JoinHandle, time};
+use shadowsocks::manager::protocol::{AURequest, AUResponse, ServerConfigOther};
 use crate::{acl::AccessControl, config::{ManagerConfig, ManagerServerHost, ManagerServerMode, SecurityConfig}, me_debug, net::FlowStat, server::ServerBuilder};
 
 enum ServerInstanceMode {
@@ -44,6 +43,7 @@ impl Drop for ServerInstance {
     fn drop(&mut self) {
         #[allow(irrefutable_let_patterns)]
         if let ServerInstanceMode::Builtin { ref abortable, .. } = self.mode {
+            warn!("<< aborting SERVER ALSO!! {:?}", abortable.is_finished());
             abortable.abort();
         }
     }
@@ -242,14 +242,36 @@ impl Manager {
         }
     }
 
-    /// Add a server programatically
+    /// Add a server programmatically
     pub async fn add_server(&self, svr_cfg: ServerConfig) {
         match self.svr_cfg.server_mode {
-            ManagerServerMode::Builtin => self.add_server_builtin(svr_cfg).await,
+            ManagerServerMode::Builtin => {
+                debug!("<< built-in server mode >>");
+                self.add_server_builtin(svr_cfg).await
+            },
             #[cfg(unix)]
-            ManagerServerMode::Standalone => self.add_server_standalone(svr_cfg).await,
+            ManagerServerMode::Standalone => {
+                debug!("<< standalone server mode >>");
+                self.add_server_standalone(svr_cfg).await
+            },
         }
     }
+
+    // /// Add a user programmatically
+    // pub async fn add_users(&self, svr_cfg: ServerConfig) {
+    //     match self.svr_cfg.server_mode {
+    //         ManagerServerMode::Builtin => {
+    //             // todo: do stuff here!!
+    //             // debug!("<< built-in server mode >>");
+    //             // self.add_server_builtin(svr_cfg).await
+    //         },
+    //         #[cfg(unix)]
+    //         ManagerServerMode::Standalone => {
+    //             warn!("<< standalone server mode not implemented for add users >>");
+    //             // Not Implemented!
+    //         },
+    //     }
+    // }
 
     async fn add_server_builtin(&self, svr_cfg: ServerConfig) {
         // Each server should use a separate Context, but shares
@@ -283,6 +305,25 @@ impl Manager {
         let server_port = server_builder.server_config().addr().port();
 
         let mut servers = self.servers.lock().await;
+        let mut sss = servers.get(&server_port);
+        match sss {
+            Some(sss) => {
+                match &sss.mode {
+                    ServerInstanceMode::Builtin { flow_stat, abortable} => {
+                        warn!("<< aborting SERVER!!");
+                        abortable.abort();
+                        // actually aborting the server can take a second or more, this
+                        // assures us that it's done.
+                        while (!abortable.is_finished()) {
+                            debug!("<<< waiting ...");
+                            time::sleep(Duration::from_millis(500)).await;
+                        }
+                    }
+                    ServerInstanceMode::Standalone { .. } => {}
+                }
+            }
+            None => {}
+        }
         // Close existed server
         if let Some(v) = servers.remove(&server_port) {
             info!(
@@ -300,6 +341,7 @@ impl Manager {
                 return;
             }
         };
+
 
         let abortable = tokio::spawn(async move { server.run().await });
 
@@ -456,7 +498,7 @@ impl Manager {
             return;
         }
 
-        // Greate. Record into the map
+        // Create. Record into the map
         servers.insert(
             port,
             ServerInstance {
@@ -466,7 +508,85 @@ impl Manager {
         );
     }
 
+    fn get_address(&self, cfg:&ServerConfig) -> ServerAddr {
+        return cfg.addr().clone();
+    }
+
+    async fn get_config(&self, port: u16) -> Option<ServerConfig> {
+        let mut found :Option<ServerConfig> = None;
+        let servers = self.servers.lock().await;
+        debug!("<< servers: {:?}", servers.len());
+        for ss in servers.iter() {
+            let same = ss.1.svr_cfg.addr().port() == port;
+            debug!("<< port: {:?}, same: {:?}", ss.1.svr_cfg.addr().port(), same);
+            if same {
+                found =  Some(ss.1.svr_cfg.clone());
+            }
+        }
+        found
+    }
+
+    fn user_manager_with_users(config: &ServerConfigOther) -> io::Result<ServerUserManager> {
+        let mut user_manager = ServerUserManager::new("WithUsers!");
+        if let Some(ref users) = config.users {
+            for user in users.iter() {
+                let user = match ServerUser::with_encoded_key(&user.name, &user.password) {
+                    Ok(u) => u,
+                    Err(..) => {
+                        error!(
+                            "users[].password must be encoded with base64, but found: {}",
+                            user.password
+                        );
+
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "users[].password must be encoded with base64",
+                        ));
+                    }
+                };
+
+                user_manager.add_user(user);
+            }
+
+        }
+        Ok(user_manager)
+    }
+
     async fn handle_add_user(&self, req: &AURequest) -> io::Result<AUResponse> {
+        // todo, do work here !!!!
+        let new_config = &req.config;
+        let port  = new_config.server_port;
+        let existing_config_op = self.get_config(port).await;
+
+        match Self::user_manager_with_users(new_config) {
+            Ok(mut manager) => {
+                match existing_config_op {
+                    Some(mut existing_config) => {
+                        match existing_config.user_manager() {
+                            None => {}
+                            Some(exManager) => {
+                                exManager.users_iter().for_each(|u| {
+                                    manager.add_user(u.clone());
+                                });
+                            }
+                        }
+
+                        debug!("Setting new Users: {:?}", manager.users_iter().collect::<Vec<_>>());
+                        existing_config.set_user_manager(manager);  // this does the magic!! (I think)
+
+                        // This should restart the existing builtin server
+                        // todo, figure out how to not restart!!
+                        // self.add_server(existing_config).await;
+
+                    },
+                    None => {
+                        warn!("Server not found");
+                    }
+                }
+            }
+            Err(_) => {}
+        }
+
         Ok(AUResponse("sup".into()))
     }
 
@@ -529,30 +649,40 @@ impl Manager {
 
         svr_cfg.set_mode(mode.unwrap_or(self.svr_cfg.mode));
 
-        if let Some(ref users) = req.users {
-            let mut user_manager = ServerUserManager::new();
-
-            for user in users.iter() {
-                let user = match ServerUser::with_encoded_key(&user.name, &user.password) {
-                    Ok(u) => u,
-                    Err(..) => {
-                        error!(
-                            "users[].password must be encoded with base64, but found: {}",
-                            user.password
-                        );
-
-                        return Err(io::Error::new(
-                            io::ErrorKind::Other,
-                            "users[].password must be encoded with base64",
-                        ));
-                    }
-                };
-
-                user_manager.add_user(user);
+        match Self::user_manager_with_users(req) {
+            Ok(manager) => {
+                svr_cfg.set_user_manager(manager);
             }
-
-            svr_cfg.set_user_manager(user_manager);
+            Err(e) => {
+                return Err(e);
+            }
         }
+
+        // if let Some(ref users) = req.users {
+
+            // let mut user_manager = ServerUserManager::new();
+            //
+            // for user in users.iter() {
+            //     let user = match ServerUser::with_encoded_key(&user.name, &user.password) {
+            //         Ok(u) => u,
+            //         Err(..) => {
+            //             error!(
+            //                 "users[].password must be encoded with base64, but found: {}",
+            //                 user.password
+            //             );
+            //
+            //             return Err(io::Error::new(
+            //                 io::ErrorKind::Other,
+            //                 "users[].password must be encoded with base64",
+            //             ));
+            //         }
+            //     };
+            //
+            //     user_manager.add_user(user);
+            // }
+
+            // svr_cfg.set_user_manager(user_manager);
+        // }
 
         self.add_server(svr_cfg).await;
 
@@ -593,7 +723,7 @@ impl Manager {
                 users = Some(vu);
             }
 
-            let sc = protocol::ServerConfig {
+            let sc = protocol::ServerConfigOther {
                 server_port: svr_cfg.addr().port(),
                 password: svr_cfg.password().to_owned(),
                 method: None,

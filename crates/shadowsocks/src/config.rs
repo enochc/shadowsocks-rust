@@ -2,21 +2,14 @@
 
 #[cfg(unix)]
 use std::path::PathBuf;
-use std::{
-    collections::HashMap,
-    error,
-    fmt::{self, Debug, Display},
-    net::SocketAddr,
-    str::FromStr,
-    sync::Arc,
-    time::Duration,
-};
+use std::{collections::HashMap, error, fmt::{self, Debug, Display}, io, net::SocketAddr, str::FromStr, sync::Arc, time::Duration};
 
 use base64::Engine as _;
 use byte_string::ByteStr;
 use bytes::Bytes;
 use cfg_if::cfg_if;
 use log::{debug, error};
+use serde::de::Unexpected::Str;
 use thiserror::Error;
 use url::{self, Url};
 
@@ -260,23 +253,25 @@ pub enum ServerUserError {
 /// Server multi-users manager
 #[derive(Clone, Debug)]
 pub struct ServerUserManager {
+    name: String,
     users: HashMap<Bytes, Arc<ServerUser>>,
 }
 
 impl ServerUserManager {
     /// Create a new manager
-    pub fn new() -> ServerUserManager {
-        ServerUserManager { users: HashMap::new() }
+    pub fn new(name: &str) -> ServerUserManager {
+        ServerUserManager { name: name.into(), users: HashMap::new() }
     }
 
     /// Add a new user
     pub fn add_user(&mut self, user: ServerUser) {
-        debug!("<< add user: {:?}", user);
+        debug!("<< add user: {:?} = {:?}", user.name, user.clone_identity_hash());
         self.users.insert(user.clone_identity_hash(), Arc::new(user));
     }
 
     /// Get user by hash key
     pub fn get_user_by_hash(&self, user_hash: &[u8]) -> Option<&ServerUser> {
+        debug!("<< get user by hash:{:?} {:?} = {:?}", self.name, user_hash, self.users);
         self.users.get(user_hash).map(AsRef::as_ref)
     }
 
@@ -298,7 +293,7 @@ impl ServerUserManager {
 
 impl Default for ServerUserManager {
     fn default() -> ServerUserManager {
-        ServerUserManager::new()
+        ServerUserManager::new("default".into())
     }
 }
 
