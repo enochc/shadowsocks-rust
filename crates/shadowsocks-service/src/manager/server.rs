@@ -3,6 +3,7 @@
 #[cfg(unix)]
 use std::path::PathBuf;
 use std::{collections::HashMap, io, net::SocketAddr, sync::Arc, time::Duration};
+use futures::future::err;
 use log::{error, info, debug, warn};
 use shadowsocks::{
     config::{Mode, ServerConfig, ServerType, ServerUser, ServerUserManager},
@@ -21,6 +22,7 @@ use shadowsocks::{
     ManagerListener, ServerAddr,
 };
 use tokio::{sync::Mutex, task::JoinHandle, time};
+use tokio::sync::mpsc::UnboundedReceiver;
 use shadowsocks::manager::protocol::{AURequest, AUResponse, ServerConfigOther};
 use crate::{acl::AccessControl, config::{ManagerConfig, ManagerServerHost, ManagerServerMode, SecurityConfig}, me_debug, net::FlowStat, server::ServerBuilder};
 
@@ -273,7 +275,7 @@ impl Manager {
     //     }
     // }
 
-    async fn add_server_builtin(&self, svr_cfg: ServerConfig) {
+    async fn add_server_builtin(&self, mut svr_cfg: ServerConfig, config_receiver: Option<UnboundedReceiver<ServerConfigOther>>) {
         // Each server should use a separate Context, but shares
         //
         // * AccessControlList
@@ -343,8 +345,36 @@ impl Manager {
         };
 
 
-        let abortable = tokio::spawn(async move { server.run().await });
+        let abortable = tokio::spawn(async move {
 
+            // consumer for
+            // inner handle for receiving manager_configs
+            match config_receiver {
+                None => {}
+                Some(mut r) => {
+                    tokio::spawn(async move {
+                        // Start process receiving new configs!!
+                        match r.recv().await {
+                            Some(new_config) => {
+                                // todo gen usermanager
+                                match Self::user_manager_with_users(&new_config) {
+                                    Ok(manager) => {
+                                        svr_cfg.set_user_manager(Some(manager));
+                                    }
+                                    Err(e) => { error!("failed to set user manager", e); }
+                                }
+
+                            }
+                            None => {
+                                svr_cfg.set_user_manager(None);//svr_cfg() = None;
+                            }
+                        }
+                    });
+                }
+            }
+
+            server.run().await
+        });
         servers.insert(
             server_port,
             ServerInstance {
@@ -526,7 +556,7 @@ impl Manager {
         found
     }
 
-    fn user_manager_with_users(config: &ServerConfigOther) -> io::Result<ServerUserManager> {
+    pub fn user_manager_with_users(config: &ServerConfigOther) -> io::Result<ServerUserManager> {
         let mut user_manager = ServerUserManager::new("WithUsers!");
         if let Some(ref users) = config.users {
             for user in users.iter() {

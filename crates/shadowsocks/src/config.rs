@@ -3,7 +3,7 @@
 #[cfg(unix)]
 use std::path::PathBuf;
 use std::{collections::HashMap, error, fmt::{self, Debug, Display}, io, net::SocketAddr, str::FromStr, sync::Arc, time::Duration};
-
+use std::sync::Mutex;
 use base64::Engine as _;
 use byte_string::ByteStr;
 use bytes::Bytes;
@@ -11,6 +11,8 @@ use cfg_if::cfg_if;
 use log::{debug, error};
 use serde::de::Unexpected::Str;
 use thiserror::Error;
+use tokio::sync::mpsc;
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use url::{self, Url};
 
 use crate::{
@@ -18,6 +20,7 @@ use crate::{
     plugin::PluginConfig,
     relay::socks5::Address,
 };
+use crate::manager::protocol::ServerConfigOther;
 
 const USER_KEY_BASE64_ENGINE: base64::engine::GeneralPurpose = base64::engine::GeneralPurpose::new(
     &base64::alphabet::STANDARD,
@@ -263,6 +266,32 @@ impl ServerUserManager {
         ServerUserManager { name: name.into(), users: HashMap::new() }
     }
 
+    pub fn from_server_config_other(server_config: ServerConfigOther) -> io::Result<ServerUserManager> {
+        let mut user_manager = ServerUserManager::new("WithUsers!");
+        if let Some(ref users) = server_config.users {
+            for user in users.iter() {
+                let user = match ServerUser::with_encoded_key(&user.name, &user.password) {
+                    Ok(u) => u,
+                    Err(..) => {
+                        error!(
+                        "users[].password must be encoded with base64, but found: {}",
+                        user.password
+                    );
+
+                        return Err(io::Error::new(
+                            io::ErrorKind::Other,
+                            "users[].password must be encoded with base64",
+                        ));
+                    }
+                };
+
+                user_manager.add_user(user);
+            }
+
+        }
+        Ok(user_manager)
+    }
+
     /// Add a new user
     pub fn add_user(&mut self, user: ServerUser) {
         debug!("<< add user: {:?} = {:?}", user.name, user.clone_identity_hash());
@@ -328,6 +357,8 @@ pub struct ServerConfig {
     /// Extensible Identity Headers (AEAD-2022)
     ///
     /// For server, support multi-users with EIH
+    // user_manager: Option<Arc<ServerUserManager>>,
+    user_manager_consumer: Option<UnboundedSender<Option<ServerUserManager>>>,
     user_manager: Option<Arc<ServerUserManager>>,
 
     /// Plugin config
@@ -446,6 +477,38 @@ where
 }
 
 impl ServerConfig {
+
+    // pub fn newWithReceiver<A, P>(addr: A, password: P, method: CipherKind) -> (ServerConfig, UnboundedSender<Option<ServerUserManager>>)
+    // where
+    //     A: Into<crate::config::ServerAddr>,
+    //     P: Into<String>,
+    // {
+    //     let (password, enc_key, identity_keys) = password_to_keys(method, password);
+    //     let (sender, receiver)  = mpsc::unbounded_channel();
+    //     let sender_clone = sender.clone();
+    //     tokio::spawn(async move {
+    //
+    //     });
+    //
+    //     (ServerConfig {
+    //         addr: addr.into(),
+    //         password,
+    //         method,
+    //         enc_key,
+    //         identity_keys: Arc::new(identity_keys),
+    //         user_manager_consumer: Some(sender),
+    //         user_manager: None,
+    //         timeout: None,
+    //         plugin: None,
+    //         plugin_addr: None,
+    //         remarks: None,
+    //         id: None,
+    //         mode: Mode::TcpAndUdp, // Server serves TCP & UDP by default
+    //         weight: ServerWeight::new(),
+    //         source: ServerSource::Default,
+    //     }, sender_clone)
+    // }
+
     /// Create a new `ServerConfig`
     pub fn new<A, P>(addr: A, password: P, method: CipherKind) -> ServerConfig
     where
@@ -460,6 +523,7 @@ impl ServerConfig {
             method,
             enc_key,
             identity_keys: Arc::new(identity_keys),
+            user_manager_consumer: None,
             user_manager: None,
             timeout: None,
             plugin: None,
@@ -525,8 +589,15 @@ impl ServerConfig {
     }
 
     /// Set user manager, enable Server's multi-user support with EIH
-    pub fn set_user_manager(&mut self, user_manager: ServerUserManager) {
-        self.user_manager = Some(Arc::new(user_manager));
+    pub fn set_user_manager(&mut self, user_manager: Option<ServerUserManager>) {
+        match user_manager {
+            None => self.user_manager = None,
+
+            Some(um) => {
+                self.user_manager = Some(Arc::new(um));
+            }
+        }
+        // self.user_manager = Some(Arc::new(Mutex::new(user_manager)));
     }
 
     /// Get user manager (Server)

@@ -64,7 +64,7 @@ use byte_string::ByteStr;
 use bytes::{Buf, BufMut, Bytes, BytesMut};
 use log::{error, debug};
 use lru_time_cache::LruCache;
-
+use std::sync::Mutex;
 #[cfg(feature = "aead-cipher-2022-extra")]
 use crate::crypto::v2::udp::ChaCha8Poly1305Cipher;
 use crate::{
@@ -245,7 +245,7 @@ fn decrypt_message(
     method: CipherKind,
     key: &[u8],
     packet: &mut [u8],
-    user_manager: Option<&ServerUserManager>,
+    user_manager: Option<Arc<Mutex<ServerUserManager>>>,
     strict: &bool // Must have a user_manager to decrypt messages
 ) -> ProtocolResult<Option<Arc<ServerUser>>> {
     let mut client_user = None;
@@ -327,6 +327,8 @@ fn decrypt_message(
 
             let cipher = if method_support_eih(method) {
                 // todo create mutex for user_manager so it can be updated!!
+                // if let Some(user_manager) = user_manager {
+                // let ss = user_manager.lock().expect("user manager is poisoned");
                 if let Some(user_manager) = user_manager {
                     // Extensible Identity Header
                     // https://github.com/Shadowsocks-NET/shadowsocks-specs/blob/main/2022-2-shadowsocks-2022-extensible-identity-headers.md
@@ -358,7 +360,8 @@ fn decrypt_message(
                         eih[i] ^= session_id_packet_id[i];
                     }
 
-                    match user_manager.clone_user_by_hash(eih) {
+                    let manager = *user_manager.lock().expect("user manager lock");
+                    match manager.clone_user_by_hash(eih) {
                         None => {
                             error!("user with identity {:?} not found", ByteStr::new(eih));
                             return Err(ProtocolError::InvalidClientUser(Bytes::copy_from_slice(eih)));
@@ -527,7 +530,7 @@ pub fn decrypt_client_payload_aead_2022(
     method: CipherKind,
     key: &[u8],
     payload: &mut [u8],
-    user_manager: Option<&ServerUserManager>,
+    user_manager: Option<Arc<Mutex<ServerUserManager>>>,
     strict: &bool,
 ) -> ProtocolResult<(usize, Address, UdpSocketControlData)> {
     let nonce_len = get_nonce_len(method);

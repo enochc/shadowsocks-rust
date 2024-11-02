@@ -7,19 +7,20 @@ use std::{
     sync::Arc,
     task::{self, Poll},
 };
-
+use std::sync::Mutex;
 use byte_string::ByteStr;
 use bytes::Bytes;
 use futures::ready;
+use libc::raise;
 use log::{debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
-
+use tokio::sync::mpsc::UnboundedReceiver;
 use crate::{
     config::ServerUserManager,
     context::Context,
     crypto::{CipherCategory, CipherKind},
 };
-
+use crate::manager::protocol::ServerConfigOther;
 use super::aead::{DecryptedReader as AeadDecryptedReader, EncryptedWriter as AeadEncryptedWriter};
 #[cfg(feature = "aead-cipher-2022")]
 use super::aead_2022::{DecryptedReader as Aead2022DecryptedReader, EncryptedWriter as Aead2022EncryptedWriter};
@@ -118,6 +119,7 @@ impl DecryptedReader {
         context: &Context,
         stream: &mut S,
         buf: &mut ReadBuf<'_>,
+        config_receiver: Option<UnboundedReceiver<ServerConfigOther>>,
     ) -> Poll<ProtocolResult<()>>
     where
         S: AsyncRead + Unpin + ?Sized,
@@ -133,7 +135,7 @@ impl DecryptedReader {
             DecryptedReader::None => Pin::new(stream).poll_read(cx, buf).map_err(Into::into),
             #[cfg(feature = "aead-cipher-2022")]
             DecryptedReader::Aead2022(ref mut reader) => {
-                reader.poll_read_decrypted(cx, context, stream, buf).map_err(Into::into)
+                reader.poll_read_decrypted(cx, context, stream, buf, config_receiver).map_err(Into::into)
             }
         }
     }
@@ -476,6 +478,7 @@ pub trait CryptoRead {
         cx: &mut task::Context<'_>,
         context: &Context,
         buf: &mut ReadBuf<'_>,
+        config_receiver: Option<UnboundedReceiver<ServerConfigOther>>,
     ) -> Poll<ProtocolResult<()>>;
 }
 
@@ -506,6 +509,7 @@ where
         cx: &mut task::Context<'_>,
         context: &Context,
         buf: &mut ReadBuf<'_>,
+        config_receiver: Option<UnboundedReceiver<ServerConfigOther>>,
     ) -> Poll<ProtocolResult<()>> {
         let CryptoStream {
             ref mut dec,
@@ -514,7 +518,7 @@ where
             ref mut has_handshaked,
             ..
         } = *self;
-        ready!(dec.poll_read_decrypted(cx, context, stream, buf))?;
+        ready!(dec.poll_read_decrypted(cx, context, stream, buf, config_receiver))?;
 
         if !*has_handshaked && dec.handshaked() {
             *has_handshaked = true;

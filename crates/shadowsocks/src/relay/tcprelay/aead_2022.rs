@@ -52,7 +52,7 @@ use std::{
     task::{self, Poll},
     time::SystemTime,
 };
-
+use std::sync::Mutex;
 use aes::{
     cipher::{BlockDecrypt, BlockEncrypt, KeyInit},
     Aes128, Aes256, Block,
@@ -62,13 +62,15 @@ use bytes::{Buf, BufMut, Bytes, BytesMut};
 use futures::ready;
 use log::{error, debug};
 use tokio::io::{AsyncRead, AsyncWrite, ReadBuf};
-
+use tokio::sync::mpsc::UnboundedReceiver;
 use super::{crypto_io::StreamType, proxy_stream::protocol::v2::SERVER_STREAM_TIMESTAMP_MAX_DIFF};
 use crate::{
     config::{method_support_eih, ServerUserManager},
     context::Context,
     crypto::{v2::tcp::TcpCipher, CipherKind},
 };
+
+use crate::manager::protocol::ServerConfigOther;
 
 #[inline]
 fn get_now_timestamp() -> u64 {
@@ -135,7 +137,7 @@ pub struct DecryptedReader {
     salt: Option<Bytes>,
     request_salt: Option<Bytes>,
     data_chunk_count: u64,
-    user_manager: Option<Arc<ServerUserManager>>,
+    user_manager: Option<Arc<ServerUserManager>>,//Option<Arc<Mutex<ServerUserManager>>>,
     user_key: Option<Bytes>,
     has_handshaked: bool,
 }
@@ -201,10 +203,30 @@ impl DecryptedReader {
         context: &Context,
         stream: &mut S,
         buf: &mut ReadBuf<'_>,
+        mut user_manager_config_receiver: Option<UnboundedReceiver<ServerConfigOther>>,
     ) -> Poll<ProtocolResult<()>>
     where
         S: AsyncRead + Unpin + ?Sized,
     {
+        tokio::spawn(async move {
+           // todo maybe do the thing here!!
+            if let Some(mut receiver) = user_manager_config_receiver {
+                loop {
+                    match receiver.recv().await {
+                        Some(m) => {
+                            debug!("received config config from remote {:?}", m);
+                            // let um = ServerUserManager::from_server_config_other(m);
+                            if let Ok(um) = ServerUserManager::from_server_config_other(m) {
+                                self.user_manager = Some(Arc::new(um));
+                            } else {
+                                self.user_manager = None;
+                            }
+                        }
+                        None => {}
+                    }
+                }
+            }
+        });
         loop {
             match self.state {
                 DecryptReadState::ReadHeader { ref key } => {
@@ -331,6 +353,8 @@ impl DecryptedReader {
                 );
 
                 match user_manager.get_user_by_hash(user_hash) {
+                    // TODO!!! Im here so keep going. need to unlock user manager here!!
+                // match user_manager.clone_user_by_hash(user_hash) {
                     None => {
                         return Err(ProtocolError::InvalidClientUser(Bytes::copy_from_slice(user_hash))).into();
                     }

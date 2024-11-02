@@ -11,7 +11,7 @@ use std::{
     task::{ready, Context, Poll},
     time::Duration,
 };
-
+use std::sync::Mutex;
 use byte_string::ByteStr;
 use bytes::{Bytes, BytesMut};
 use log::{info, warn, debug};
@@ -83,7 +83,7 @@ pub struct ProxySocket<S> {
     recv_timeout: Option<Duration>,
     context: SharedContext,
     identity_keys: Arc<Vec<Bytes>>,
-    user_manager: Option<Arc<ServerUserManager>>,
+    user_manager: Option<Arc<Mutex<ServerUserManager>>>,
     strict: bool
 }
 
@@ -449,7 +449,7 @@ where
     fn decrypt_recv_buffer(
         &self,
         recv_buf: &mut [u8],
-        user_manager: Option<&ServerUserManager>,
+        user_manager: Option<Arc<Mutex<ServerUserManager>>>,
         strict: &bool,
     ) -> ProtocolResult<(usize, Address, Option<UdpSocketControlData>)> {
         match self.socket_type {
@@ -487,7 +487,14 @@ where
             },
         };
 
-        let (n, addr, control) = match self.decrypt_recv_buffer(&mut recv_buf[..recv_n], self.user_manager.as_deref(), &self.strict) {
+        let manager = match self.user_manager {
+            None => None,
+            Some(ref m) => {
+                Some(m.clone())
+            },
+        };
+
+        let (n, addr, control) = match self.decrypt_recv_buffer(&mut recv_buf[..recv_n], manager, &self.strict) {
             Ok(x) => x,
             Err(err) => return Err(ProxySocketError::ProtocolError(err)),
         };
@@ -535,7 +542,14 @@ where
             },
         };
 
-        let (n, addr, control) = match self.decrypt_recv_buffer(&mut recv_buf[..recv_n], self.user_manager.as_deref(), &self.strict) {
+        let manager = match self.user_manager {
+            None => None,
+            Some(ref m) => {
+                Some(m.clone())
+            },
+        };
+
+        let (n, addr, control) = match self.decrypt_recv_buffer(&mut recv_buf[..recv_n], manager, &self.strict) {
             Ok(x) => x,
             Err(err) => return Err(ProxySocketError::ProtocolErrorWithPeer(target_addr, err)),
         };

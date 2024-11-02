@@ -1,7 +1,7 @@
 //! A TCP listener for accepting shadowsocks' client connection
 
 use std::{io, net::SocketAddr, sync::Arc};
-
+use std::sync::Mutex;
 use once_cell::sync::Lazy;
 use tokio::{
     io::{AsyncRead, AsyncWrite},

@@ -20,7 +20,7 @@
 //! +--------+-----------+-----------+
 //! ```
 use std::io::Cursor;
-
+use std::sync::{Arc, Mutex};
 use bytes::{BufMut, Bytes, BytesMut};
 
 use crate::{
@@ -135,7 +135,7 @@ pub fn decrypt_client_payload(
     method: CipherKind,
     key: &[u8],
     payload: &mut [u8],
-    user_manager: Option<&ServerUserManager>,
+    user_manager: Option<Arc<Mutex<ServerUserManager>>>,
     strict: &bool,
 ) -> ProtocolResult<(usize, Address, Option<UdpSocketControlData>)> {
     match method.category() {
